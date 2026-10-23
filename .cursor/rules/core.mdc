@@ -1,0 +1,20 @@
+---
+description: Candy Thief project guardrails
+alwaysApply: true
+---
+# Rules
+- Reply in Korean. Code identifiers in English.
+- Unity 2D, C#, WebGL MVP; preserve existing Unity version and project conventions.
+- `Docs/GDD.md` is the approved gameplay source of truth; `Docs/DECISIONS.md` records approved changes. If unclear, ask; do not invent rules.
+- Inspect relevant files before editing. Modify the fewest files possible; no unrelated refactors, packages, or features.
+- Prefer simple built-in Unity components; serialized Inspector fields for tuning. Avoid speculative abstractions.
+- Do not claim Unity compilation, Play Mode, MCP, or browser testing unless actually performed.
+- After edits report only: changed files, what works, test evidence, blockers. Keep concise.
+
+# Unity Project Location
+- Unity project root: CandyThief/
+- Unity Assets directory: CandyThief/Assets/
+- Unity Packages directory: CandyThief/Packages/
+- Unity ProjectSettings directory: CandyThief/ProjectSettings/
+- All Unity scripts, scenes, and prefabs must be created inside CandyThief/Assets/.
+
