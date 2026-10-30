@@ -15,9 +15,14 @@ Goal: Title → Start → simple test room → WASD player movement and collisio
 - No new packages.
 
 ## Temporary art integration
-- Implemented: selected Ninja Adventure CC0 art, player Visual/Animator separation,
-  guard/shopper/item prefabs, and a four-layer prototype shop Tilemap.
-- Static checks passed: scripts compile without reported errors, required prefab/animation
-  assets exist, and the generated scene contains the expected visual and collision layers.
-- Manual verification pending: movement animation, collision feel, camera tracking, and
-  final tile alignment in Play Mode. Unity MCP was unavailable during this task.
+- Implemented: Ninja Adventure CC0 art with corrected slicing. `Elements` is whole
+  objects (counter/table/round table), interior walls use `TilesetInterior` peach
+  joints, floor uses `Floor_5_1`. Player Visual/Animator remains separate from
+  `PlayerController`.
+- Scene contents: rectangular room, south door gap, 3 furniture prefabs, player,
+  1 guard, 2 shoppers.
+- Static checks passed: v4 import marker on source sprites, Interior wall tile
+  assets, and expected scene object names.
+- Manual verification pending: Unity Game View screenshot, Play Mode movement
+  animation, collision feel, Y-sort in front/behind furniture, and camera tracking.
+  Unity MCP was unavailable.

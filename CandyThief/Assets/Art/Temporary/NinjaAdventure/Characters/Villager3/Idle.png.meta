@@ -65,10 +65,10 @@ TextureImporter:
   lightmap: 0
   compressionQuality: 50
   spriteMode: 2
-  spriteExtrude: 1
-  spriteMeshType: 1
-  alignment: 0
-  spritePivot: {x: 0.5, y: 0.5}
+  spriteExtrude: 0
+  spriteMeshType: 0
+  alignment: 7
+  spritePivot: {x: 0.5, y: 0}
   spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
@@ -140,15 +140,15 @@ TextureImporter:
         y: 0
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: af63d393c0f64e670800000000000000
+      spriteID: 006a5b03644c4ef4caaf2092a606b487
       internalID: 8567094489456129786
       vertices: []
       indices: 
@@ -162,15 +162,15 @@ TextureImporter:
         y: 0
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 95d4e0f15868fff70800000000000000
+      spriteID: e9d34f09a035fd14796a8fdaa54894e2
       internalID: 9223238468187868505
       vertices: []
       indices: 
@@ -184,15 +184,15 @@ TextureImporter:
         y: 0
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 52e966a72b7a93850800000000000000
+      spriteID: 6745be1852261564d8886301e618003d
       internalID: 6357296734009728549
       vertices: []
       indices: 
@@ -206,15 +206,15 @@ TextureImporter:
         y: 0
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 3b63976d162e7fb40800000000000000
+      spriteID: cb283984fc15cf5488f2534fc2b1e705
       internalID: 5474092781930100403
       vertices: []
       indices: 
@@ -224,7 +224,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 202e322f6968bd842baab1a00ecafd04
     internalID: 0
     vertices: []
     indices: 
@@ -234,15 +234,12 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      Idle_0: 4723107735738678597
-      Idle_1: -7385789195546760866
-      Idle_2: 3234629978573100161
       Idle_Down: 8567094489456129786
       Idle_Left: 6357296734009728549
       Idle_Right: 5474092781930100403
       Idle_Up: 9223238468187868505
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
-  userData: CandyThief.NinjaAdventure.v1
+  userData: CandyThief.NinjaAdventure.v4
   assetBundleName: 
   assetBundleVariant: 

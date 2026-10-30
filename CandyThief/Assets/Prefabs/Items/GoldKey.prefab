@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2849741606859964847}
   - component: {fileID: 7903507509816298500}
+  - component: {fileID: 5021074254142149248}
   m_Layer: 0
   m_Name: GoldKey
   m_TagString: Untagged
@@ -79,7 +80,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 8
+  m_SortingOrder: 1001
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: 910287740b3069b4b93c2ae18785619b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -90,5 +91,20 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
   m_BlendShapeWeights: []
+--- !u!114 &5021074254142149248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2282215485476437432}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bcd63113ed17414da7c69e103304d19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YSortRenderer
+  sortOrigin: {fileID: 2849741606859964847}
+  sortPointOffset: 0
+  orderOffset: 1001

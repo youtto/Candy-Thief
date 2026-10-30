@@ -67,7 +67,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: -0.28}
+  m_Offset: {x: 0, y: 0.14}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -77,7 +77,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.6, y: 0.35}
+  m_Size: {x: 0.5, y: 0.28}
   m_EdgeRadius: 0
 --- !u!1 &2188011887889570820
 GameObject:
@@ -89,6 +89,7 @@ GameObject:
   m_Component:
   - component: {fileID: 62717992529175568}
   - component: {fileID: 7213574451722563141}
+  - component: {fileID: 2532586915546197308}
   - component: {fileID: 6189151170003364922}
   - component: {fileID: 3423381201021270819}
   m_Layer: 0
@@ -160,7 +161,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 10
+  m_SortingOrder: 1000
   m_MaskInteraction: 0
   m_Sprite: {fileID: 8567094489456129786, guid: 370cb00793045fe40adbfa3b12bb4363, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -171,8 +172,23 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_SpriteSortPoint: 0
+  m_SpriteSortPoint: 1
   m_BlendShapeWeights: []
+--- !u!114 &2532586915546197308
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2188011887889570820}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bcd63113ed17414da7c69e103304d19, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::YSortRenderer
+  sortOrigin: {fileID: 1353208628495613274}
+  sortPointOffset: 0
+  orderOffset: 1000
 --- !u!95 &6189151170003364922
 Animator:
   serializedVersion: 7
