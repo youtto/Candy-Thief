@@ -1,0 +1,6 @@
+﻿EventID,EventName,EventDescription,PhaseFilter,EventTags,Weight,MinAlert,MaxAlert,MinRemainingTurn,MaxRemainingTurn,Repeatable,ImageKey,Enabled,Notes
+EVT_001,경비의 낮잠,경비가 꾸벅꾸벅 졸고 있다.,ALL,COMMON,25,0,99,1,999,1,event_guard_sleep,1,
+EVT_002,수상한 사탕 상자,반짝이는 상자가 놓여 있다.,LOOT,COMMON,30,0,99,1,999,1,event_candy_box,1,
+EVT_003,순찰 강화,복도에서 발소리가 가까워진다.,ALL,COMMON,20,0,99,1,999,1,event_patrol,1,
+EVT_004,비밀 통로,벽 뒤에서 작은 문을 발견했다.,MOVE,COMMON,15,0,99,1,999,1,event_secret_path,1,
+EVT_005,행운의 발견,바닥에 무언가 반짝인다.,ALL,COMMON,10,0,99,1,999,1,event_lucky_find,1,

@@ -1,0 +1,21 @@
+﻿구분,항목,설명
+필독,인코딩,"XLSX는 한국어가 정상 저장되며, 동봉 CSV는 Excel 호환 UTF-8 BOM(utf-8-sig) 형식"
+규칙,수치 상태,모든 확률·턴·보상은 검증 전 임시값이며 확정 밸런스가 아님
+규칙,판정 순서,행동 턴 차감 → 성공/실패 효과 반영 → 승패 판정 → 생존 시 이벤트 판정
+규칙,이벤트 발생,일반 행동(ActionTable EventEligible=1) 후 판정. 이벤트 선택지는 연쇄 이벤트 없음
+규칙,이벤트 확률,"GameConfig EVENT_TRIGGER_RATE + ShopTable EventRateBonusPp(퍼센트포인트), 0~100으로 제한"
+규칙,이벤트 추첨,PhaseFilter/태그/상태 조건으로 후보 필터 후 Weight 비례 추첨
+규칙,태그,ShopTable AllowedEventTags와 EventTable EventTags가 하나 이상 겹치면 허용; |는 구분자
+규칙,성공률,"ActionTable SuccessRate + ShopTable SuccessRateBonusPp(퍼센트포인트), 0~100으로 제한"
+규칙,사탕 보상,성공 시 사탕 획득량에 ShopTable CandyMultiplier 적용. 반올림 방식은 구현 시 일관되게 지정
+규칙,실패,필수 행동 실패 시 같은 페이즈에서 재시도. 턴 0 또는 경계도 100 이상 즉시 패배
+규칙,탈출,사탕 1개 이상 획득 후 LOOT의 ACT_013으로 ESCAPE 전환. 탈출 성공 시 승리
+규칙,점수,획득 사탕 × 위험 보너스. 위험 보너스 산식은 미확정이므로 구현 전 별도 결정 필요
+규칙,영구 성장,칭호/꾸미기만 영구 보존. 게임 능력치에 영향 없음
+데이터,참조 무결성,ShopTable.BackgroundImageKey 및 EventTable.ImageKey는 AssetTable.ImageKey 참조
+데이터,확장 효과,EffectTable은 향후 확장용. Implemented=0인 효과는 런타임에서 사용 금지
+데이터,조건식,NONE/ALWAYS/CANDY_AT_LEAST_1 등은 임의 스크립트가 아닌 코드에 정의된 열거형 키
+주의,칭호 ACH_003,현재 ActionTable에 성공률 10% 이하 행동이 없으므로 비활성화
+주의,이미지,AssetTable은 파일 생성 목록일 뿐 실제 PNG 파일은 별도로 생성해야 함
+추천,Unity 연동,CSV를 파싱해 ID로 조회하는 공통 데이터 로더를 구현하고 누락 ID/중복 ID를 검사
+추천,테이블 수정,Excel에서 XLSX 수정 후 UTF-8 BOM CSV로 내보내거나 제공 CSV를 활용

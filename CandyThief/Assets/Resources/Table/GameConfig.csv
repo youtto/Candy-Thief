@@ -1,0 +1,10 @@
+﻿Key,Value,ValueType,Description,Notes
+MAX_ALERT,100,INT,경계도 상한. 도달 시 실패,
+EVENT_TRIGGER_RATE,25,INT,일반 행동 종료 후 이벤트 발생 확률(%),이벤트 선택 행동은 재발동하지 않음
+MAX_EVENT_PER_ACTION,1,INT,일반 행동 1회당 이벤트 최대 발생 수,
+MIN_CANDY_TO_ESCAPE,1,INT,탈출 시 필요한 최소 사탕 수,
+BASE_SCORE_MULTIPLIER,1,FLOAT,기본 점수 배율,
+EVENT_ON_FAILED_ACTION,1,BOOL,일반 행동 실패 후에도 이벤트 판정,종료 조건 충족 시 이벤트 없음
+EVENT_CHAIN_ENABLED,0,BOOL,이벤트 선택 후 이벤트 연쇄 발생 허용 여부,MVP는 비활성
+MAX_SUCCESS_RATE,100,INT,성공률 보정 상한(%),
+MIN_SUCCESS_RATE,0,INT,성공률 보정 하한(%),

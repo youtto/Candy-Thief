@@ -1,0 +1,14 @@
+﻿ActionID,PhaseID,ActionType,ActionName,Description,SuccessRate,TurnCost,FailAlert,SuccessCandy,SuccessAlert,FailCandy,SuccessTurnDelta,FailTurnDelta,Repeatable,ShowCondition,SuccessNextPhase,EventEligible,Enabled,Notes
+ACT_001,MOVE,REQUIRED,골목길 이동,멀지만 안전한 골목길,90,3,5,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
+ACT_002,MOVE,REQUIRED,자전거 이동,조금 빠르게 이동한다,70,2,10,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
+ACT_003,MOVE,REQUIRED,지름길 질주,빠르지만 들킬 수 있다,40,1,20,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
+ACT_004,INFILTRATE,REQUIRED,자물쇠 따기,시간을 들여 문을 연다,80,3,10,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
+ACT_005,INFILTRATE,REQUIRED,뒷문 침입,뒷문으로 몰래 들어간다,50,2,15,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
+ACT_006,INFILTRATE,REQUIRED,환풍구 잠입,위험한 지름길을 선택한다,30,1,25,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
+ACT_007,LOOT,REQUIRED,진열대 털기,안전하게 사탕을 챙긴다,90,2,5,100,0,0,0,0,1,ALWAYS,LOOT,1,1,첫 성공 후 ESCAPE 선택 가능
+ACT_008,LOOT,REQUIRED,창고 털기,더 많은 사탕을 노린다,60,2,15,300,0,0,0,0,1,ALWAYS,LOOT,1,1,
+ACT_009,LOOT,REQUIRED,금고 털기,고위험 고보상,30,3,30,700,0,0,0,0,1,ALWAYS,LOOT,1,1,
+ACT_010,ESCAPE,REQUIRED,정문 탈출,조심스럽게 탈출한다,80,3,10,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
+ACT_011,ESCAPE,REQUIRED,담장 넘기,담장을 넘어서 탈출한다,60,2,20,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
+ACT_012,ESCAPE,REQUIRED,하수구 탈출,빠르게 도망친다,30,1,30,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
+ACT_013,LOOT,OPTIONAL,서둘러 탈출 준비,추가 털이를 종료하고 탈출한다,100,0,0,0,0,0,0,0,1,CANDY_AT_LEAST_1,ESCAPE,0,1,성공 확률 판정 없이 페이즈 전환

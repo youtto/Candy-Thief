@@ -1,0 +1,4 @@
+﻿ShopID,ShopName,Difficulty,StartTurn,StartAlert,SuccessRateBonusPp,CandyMultiplier,EventRateBonusPp,AllowedEventTags,BackgroundImageKey,UnlockCondition,Enabled,Notes
+SHOP_001,동네 사탕 가게,1,15,0,10,1.0,0,COMMON|NEIGHBORHOOD,shop_neighborhood,NONE,1,초급 가게. 수치는 임시값
+SHOP_002,대형 캔디숍,2,18,10,0,1.5,5,COMMON|MALL,shop_mall,NONE,1,중급 가게. 수치는 임시값
+SHOP_003,비밀 사탕 창고,3,22,20,-10,2.5,10,COMMON|WAREHOUSE,shop_warehouse,NONE,1,상급 가게. 수치는 임시값

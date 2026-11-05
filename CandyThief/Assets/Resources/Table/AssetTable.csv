@@ -1,0 +1,9 @@
+﻿AssetID,ImageKey,AssetType,FilePath,PromptKey,ImagePromptKR,GenerationStatus,ReviewStatus,Enabled,Notes
+IMG_001,shop_neighborhood,SHOP,Assets/Art/Shops/shop_neighborhood.png,SHOP_BASIC,"파스텔톤 동네 사탕 가게, 키치한 2D 일러스트",NOT_STARTED,PENDING,1,
+IMG_002,shop_mall,SHOP,Assets/Art/Shops/shop_mall.png,SHOP_MALL,"대형 캔디숍 내부, 키치한 2D 일러스트",NOT_STARTED,PENDING,1,
+IMG_003,shop_warehouse,SHOP,Assets/Art/Shops/shop_warehouse.png,SHOP_WAREHOUSE,"비밀 사탕 창고, 키치한 2D 일러스트",NOT_STARTED,PENDING,1,
+IMG_004,event_guard_sleep,EVENT,Assets/Art/Events/event_guard_sleep.png,GUARD_SLEEP,사탕 가게에서 졸고 있는 경비,NOT_STARTED,PENDING,1,
+IMG_005,event_candy_box,EVENT,Assets/Art/Events/event_candy_box.png,CANDY_BOX,빛나는 수상한 사탕 상자,NOT_STARTED,PENDING,1,
+IMG_006,event_patrol,EVENT,Assets/Art/Events/event_patrol.png,PATROL,손전등을 든 경비의 순찰,NOT_STARTED,PENDING,1,
+IMG_007,event_secret_path,EVENT,Assets/Art/Events/event_secret_path.png,SECRET_PATH,사탕 가게 벽 뒤 비밀 통로,NOT_STARTED,PENDING,1,
+IMG_008,event_lucky_find,EVENT,Assets/Art/Events/event_lucky_find.png,LUCKY_FIND,바닥에서 반짝이는 황금 사탕,NOT_STARTED,PENDING,1,

@@ -1,0 +1,6 @@
+﻿PhaseID,PhaseName,PhaseOrder,IsRequired,EntryCondition,CompleteCondition,NextPhaseID,AllowOptionalActions,Notes
+MOVE,이동,1,1,ALWAYS,REQUIRED_ACTION_SUCCESS,INFILTRATE,1,이동 성공 시 잠입
+INFILTRATE,잠입,2,1,MOVE_COMPLETED,REQUIRED_ACTION_SUCCESS,LOOT,1,잠입 실패 시 재시도
+LOOT,사탕 훔치기,3,1,INFILTRATE_COMPLETED,CANDY_AT_LEAST_1,ESCAPE,1,사탕을 획득한 후 추가 털이 또는 탈출 선택 가능
+ESCAPE,탈출,4,1,CANDY_AT_LEAST_1,REQUIRED_ACTION_SUCCESS,RESULT,0,탈출 성공 시 승리
+RESULT,결과,5,1,GAME_ENDED,ALWAYS,NONE,0,정산 화면
