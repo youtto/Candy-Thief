@@ -35,6 +35,11 @@ public static class CsvLoadRunner
             + shop1.ShopName + " / "
             + shop2.ShopName + " / "
             + shop3.ShopName);
+
+        RunState run;
+        if (RunState.TryStart(database, RunState.DefaultShopId, out run))
+            run.LogSnapshot("M1 test default shop " + RunState.DefaultShopId);
+
         return database;
     }
 

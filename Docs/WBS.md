@@ -8,9 +8,9 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 
 | ID | Work | Done when |
 |---|---|---|
-| M1-1 | CSV contract | Closed: files in `Assets/Resources/Table`; see D-008. Remaining: P-005 default shop, P-012 rounding, P-013 oversize TurnCost |
+| M1-1 | CSV contract | Closed: files in `Assets/Resources/Table`; see D-008. P-005/D-010, P-012/D-009, P-013/D-011 closed |
 | M1-2 | CSV loader (UTF-8 BOM, header, lookup by ID) | Nine gameplay CSVs load; skip `README.csv`; missing/duplicate ID logs a clear error |
-| M1-3 | Run state: turns, alert, candy, phase, last action result | State mutates only through effects from tables |
+| M1-3 | Run state: turns, alert, candy, phase, last action result, run status | Done: `RunState` starts from ShopID; integer candy; D-011 end checks; ended runs reject mutation. No chance roll, no `finalReward` |
 | M1-4 | Action resolve: chance, turn cost, success/fail effects | Changing CSV chance/cost changes play without a code edit |
 | M1-5 | Required-action retry | After fail, the same required action can be chosen again until win/fail |
 | M1-6 | End checks: turns ≤ 0 or alert ≥ 100 fail; win not required in M1 if Escape is stubbed | Fail paths fire before any event UI |

@@ -69,17 +69,36 @@ Title / ShopSelect / Result  (uGUI screens)
 
 ### RunState
 
-Fields: `ShopID`, `PhaseID`, remaining turns, alert, candy, last result.  
-MVP mutations use Action/EventOption columns. Do not route through `EffectTable` until `Implemented=1`.
+Fields: `ShopID`, `CurrentPhase`, remaining turns, alert, integer run candy, last action result, `RunStatus` (`InProgress` / `Won` / `Failed`).  
+Start from a `ShopID` via `CsvDatabase` (`StartTurn`, `StartAlert`, candy 0, first `PhaseTable` row by `PhaseOrder`). Unknown shop IDs fail loud. M1 test default shop is `SHOP_001` (D-010), not a production auto-select.
+
+Mutations use Action/EventOption column values passed in by later resolvers. `RunState` does not roll success chance. Do not route through `EffectTable` until `Implemented=1`. After `Won`/`Failed`, reject further mutation.
+
+Clamps: turns and candy ≥ 0; alert in `[0, GameConfig.MAX_ALERT]`. Limits come from tables/config, not literals in C#.
+
+Candy (D-009):
+
+- During the run, candy is an `int`. Add table candy deltas as integers. Do not apply `CandyMultiplier` here.
+- `finalReward` is not a RunState field in M1-3. Later escape/result work computes `CeilToInt(runCandy × Shop.CandyMultiplier)` on escape success, else 0.
+
+End check (D-011), after TurnCost and deltas:
+
+1. `Alert >= MAX_ALERT` → `Failed` (`AlertLimit`), including when this action was a successful escape
+2. Else escape-phase action success and candy ≥ `MIN_CANDY_TO_ESCAPE` → `Won` (allowed if remaining turns are 0)
+3. Else remaining turns ≤ 0 → `Failed` (`NoTurns`)
+4. Else stay `InProgress`; successful non-winning actions may apply `SuccessNextPhase`
+
+Selection: `TurnCost` > remaining turns is rejected with no state change. Equal cost is allowed.
 
 ### Resolvers
 
-Order: subtract `TurnCost` → success/fail deltas → win/fail → event if alive.
+Order: reject if `TurnCost` > remaining → subtract `TurnCost` → success/fail deltas → end check (above) → event if still `InProgress`.
 
-- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`).
-- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100).
-- Candy gain: `SuccessCandy` × `CandyMultiplier` (rounding P-012).
-- Required fail: keep the action choosable in the same phase.
+- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). Not computed in M1-3.
+- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). Not computed in M1-3.
+- Candy during run: add integer `SuccessCandy` / `FailCandy` (and event-option candy). Do **not** multiply by `CandyMultiplier` per action (D-009).
+- Escape success (later): `finalReward = CeilToInt(runCandy × CandyMultiplier)`. Escape fail: `finalReward = 0`.
+- Required fail: keep the action choosable in the same phase while `InProgress`.
 - Event only if `EventEligible=1` (and fail-path if `EVENT_ON_FAILED_ACTION=1`). Filter tags/phase/alert/turns, then weighted pick. After an option, stop.
 
 RNG: `UnityEngine.Random` unless P-006 requires a seed.

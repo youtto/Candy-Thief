@@ -42,7 +42,7 @@ Shop selection happens at run start. Each `ShopTable` row changes:
 
 - `StartTurn`, `StartAlert`
 - `SuccessRateBonusPp` (percentage points added to action success)
-- `CandyMultiplier`
+- `CandyMultiplier` (applied once to run candy on escape success; see [Candy](#candy))
 - `EventRateBonusPp` and `AllowedEventTags`
 
 Phase order after shop select follows `PhaseTable.PhaseOrder`: MOVE → INFILTRATE → LOOT → ESCAPE → RESULT. In a phase with several `ActionType=REQUIRED` rows, the player picks **one**. One success with `CompleteCondition=REQUIRED_ACTION_SUCCESS` advances via `SuccessNextPhase` / `NextPhaseID`.
@@ -53,22 +53,38 @@ LOOT stays in LOOT after a successful steal (`SuccessNextPhase=LOOT`) so the pla
 
 Win (all required):
 
-- candy acquired ≥ 1
-- Escape action succeeds
+- run candy ≥ `GameConfig.MIN_CANDY_TO_ESCAPE`
+- an **escape-phase** action succeeds
 
-Fail (either):
+Fail (first match in the end-check order below):
 
-- remaining turns reach 0
-- alert ≥ `GameConfig.MAX_ALERT` (100)
+- alert ≥ `GameConfig.MAX_ALERT`
+- remaining turns reach 0, except when this same action already produced a win
+
+Owner-approved last-turn and overlap rules (D-011):
+
+- `TurnCost` > remaining turns: the action cannot be selected.
+- `TurnCost` == remaining turns: the action may be executed.
+- After that action, remaining turns may be 0. If it was a successful escape and run candy ≥ `MIN_CANDY_TO_ESCAPE`, the run **wins**.
+- Otherwise remaining turns 0 is a fail.
+- If this action makes alert ≥ `MAX_ALERT` and also satisfies escape success, **alert fail wins**.
+- Escape success with run candy 0 is not a win.
 
 End-condition checks beat event spawning. If a resolved action or option already meets win/fail, do not roll or present an event.
 
-Resolve order (from table README, do not reorder in code):
+Resolve order (do not reorder in code):
 
-1. Subtract action/option `TurnCost`
-2. Apply success or fail candy / alert / turn deltas
-3. Win/fail check
-4. If the run is still live, event check
+1. Reject selection if `TurnCost` > remaining turns
+2. Subtract action/option `TurnCost`
+3. Apply success or fail candy / alert / turn deltas (integers; no `CandyMultiplier`)
+4. End check, in this order:
+   1. `Alert >= MAX_ALERT` → fail
+   2. Else escape-action success and candy ≥ `MIN_CANDY_TO_ESCAPE` → win (allowed at 0 turns)
+   3. Else remaining turns ≤ 0 → fail
+   4. Else the run stays live
+5. If the run is still live, event check
+
+`finalReward` is not computed in M1-3. See [Candy](#candy).
 
 ## Actions
 
@@ -78,9 +94,9 @@ Actions are data rows in `ActionTable`, referenced by ID.
 |---|---|
 | Types | `ActionType`: `REQUIRED` or `OPTIONAL` |
 | Success | `clamp(SuccessRate + Shop.SuccessRateBonusPp, MIN_SUCCESS_RATE, MAX_SUCCESS_RATE)` — values are **percent 0–100**, not 0–1 |
-| Turn cost | `TurnCost` subtracted on attempt, then `SuccessTurnDelta` / `FailTurnDelta` |
-| On failure | `FailAlert`, `FailCandy`, `FailTurnDelta` from the action row |
-| On success | `SuccessCandy` × `Shop.CandyMultiplier` (rounding `TBD`, pick one method and keep it), `SuccessAlert`, `SuccessTurnDelta` |
+| Turn cost | `TurnCost` subtracted on attempt, then `SuccessTurnDelta` / `FailTurnDelta`. Cannot select if `TurnCost` > remaining turns (D-011) |
+| On failure | `FailAlert`, `FailCandy`, `FailTurnDelta` from the action row. Candy deltas are integers added to run candy |
+| On success | Add integer `SuccessCandy` to run candy (no per-action multiplier), `SuccessAlert`, `SuccessTurnDelta` |
 | Required failure | Same-phase retry while the run is live (`Repeatable=1` on current rows) |
 | Optional | Current table: only `ACT_013` (leave LOOT → ESCAPE when candy ≥ `MIN_CANDY_TO_ESCAPE`). Not a skip of MOVE/INFILTRATE |
 | Event after action | Only if `EventEligible=1`. `ACT_013` is 0 |
@@ -102,16 +118,30 @@ Do not put probabilities, turn costs, or alert deltas in C#. Enabled rows only (
 
 M1 uses every `EventTable` row with `Enabled=1` (currently EVT_001–EVT_005), not a hardcoded count of 3.
 
+## Candy
+
+Owner-approved. D-009. Do not use floor / truncate.
+
+| When | Rule |
+|---|---|
+| During the run | Candy is an integer. Add `SuccessCandy` / `FailCandy` and event-option candy deltas as integers. `CANDY_AT_LEAST_1` and win’s “candy ≥ 1” use this run total |
+| Escape success | `finalReward = CeilToInt(runCandy × Shop.CandyMultiplier)`. Apply the multiplier **once**, not per action |
+| Escape failure, or run fail (turns / alert) | `finalReward = 0` |
+
+`RunState` in M1-3 stores run candy only. `finalReward` is computed in later escape/result work.
+
 ## Score
 
 ```
 score = candy_acquired × risk_bonus
 ```
 
+`candy_acquired` is `finalReward` (D-009), not the pre-multiplier run total.
+
 `risk_bonus` formula is `TBD` (balance in M3).  
 TEMP for M1–M2: use `GameConfig.BASE_SCORE_MULTIPLIER` (1). Do not ship this as final.
 
-Gold-candy-on-clear from v0.1 is superseded. v0.2 score uses run candy and risk bonus only.
+Gold-candy-on-clear from v0.1 is superseded. v0.2 score uses final rewarded candy and risk bonus only.
 
 ## Meta
 
@@ -236,7 +266,7 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 1. Required CSV tables load by ID with no name-based lookup.
 2. A run can attempt a required action, fail, retry, and succeed using table numbers.
 3. Failure spends turns and raises alert from data.
-4. Turns reaching 0 or alert ≥ 100 ends the run as fail.
+4. Turns reaching 0 fail unless that action was a successful escape with candy ≥ `MIN_CANDY_TO_ESCAPE`. Alert ≥ `MAX_ALERT` always fails, including when it coincides with escape success.
 5. After an `EventEligible` action, an enabled event may appear; resolving an option does not chain another event.
 6. If the run already ended, no event is shown.
 7. Portrait placeholder UI at 1080×1920 shows turns, alert, candy, and choices.
@@ -244,12 +274,12 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 
 ## Open decisions (ask before coding if blocking)
 
-1. Candy × `CandyMultiplier` rounding (README: pick one method and keep it).
-2. Whether an action whose `TurnCost` exceeds remaining turns can be selected.
+1. Candy × `CandyMultiplier` rounding — **closed (D-009):** integer run candy; `CeilToInt` once on escape success; escape fail = 0.
+2. Whether an action whose `TurnCost` exceeds remaining turns can be selected — **closed (D-011):** no. Equal cost is allowed. Last-turn escape can win. Alert ≥ max beats escape.
 3. RNG seed / run replay (M2).
 4. Score `risk_bonus` formula (M3). Until then `BASE_SCORE_MULTIPLIER`.
 5. Cosmetic currency display name (M4).
-6. M1 default shop if shop-select is deferred (`TEMP`: `SHOP_001`).
+6. M1 default shop if shop-select is deferred — **closed (D-010):** test/M1 auto-select `SHOP_001` only. Player shop-select is M2.
 7. Save format (PlayerPrefs vs JSON). `TEMP`: PlayerPrefs for M4.
 8. When to generate `AssetTable` PNGs (not needed for M1 placeholders).
 

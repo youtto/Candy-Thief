@@ -7,7 +7,7 @@
 규칙,이벤트 추첨,PhaseFilter/태그/상태 조건으로 후보 필터 후 Weight 비례 추첨
 규칙,태그,ShopTable AllowedEventTags와 EventTable EventTags가 하나 이상 겹치면 허용; |는 구분자
 규칙,성공률,"ActionTable SuccessRate + ShopTable SuccessRateBonusPp(퍼센트포인트), 0~100으로 제한"
-규칙,사탕 보상,성공 시 사탕 획득량에 ShopTable CandyMultiplier 적용. 반올림 방식은 구현 시 일관되게 지정
+규칙,사탕 보상,플레이 중 사탕은 정수로 누적. CandyMultiplier는 탈출 성공 시 합계에 한 번만 적용하고 소수점은 올림(CeilToInt). 탈출 실패 시 최종 보상 0. 버림 폐기(D-009)
 규칙,실패,필수 행동 실패 시 같은 페이즈에서 재시도. 턴 0 또는 경계도 100 이상 즉시 패배
 규칙,탈출,사탕 1개 이상 획득 후 LOOT의 ACT_013으로 ESCAPE 전환. 탈출 성공 시 승리
 규칙,점수,획득 사탕 × 위험 보너스. 위험 보너스 산식은 미확정이므로 구현 전 별도 결정 필요
