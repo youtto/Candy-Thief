@@ -36,7 +36,9 @@ Do not create a new Unity project. Do not delete existing scenes, scripts, or as
 
 ## Core loop
 
-Title → Shop Selection → Move → Infiltrate → Loot → Escape → Result → Retry / Title
+Title → Lobby → Shop Selection → Move → Infiltrate → Loot → Escape → Result → Retry / Title
+
+Lobby is a hub before shop select (D-012). It does not change run rules. Unimplemented hub menus show “준비 중” only.
 
 Shop selection happens at run start. Each `ShopTable` row changes:
 
@@ -231,7 +233,7 @@ Screen layout:
 
 M1: placeholder UI only. Final art in later milestones.
 
-Title / result / shop-select screens are M2 unless a stub is needed to enter the M1 run.
+Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). Result and the in-run choice UI remain later. Title / result / shop-select were originally M2; Title and Shop Select stubs are now pulled forward.
 
 ## Art direction (still valid)
 

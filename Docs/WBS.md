@@ -11,6 +11,7 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 | M1-1 | CSV contract | Closed: files in `Assets/Resources/Table`; see D-008. P-005/D-010, P-012/D-009, P-013/D-011 closed |
 | M1-2 | CSV loader (UTF-8 BOM, header, lookup by ID) | Nine gameplay CSVs load; skip `README.csv`; missing/duplicate ID logs a clear error |
 | M1-3 | Run state: turns, alert, candy, phase, last action result, run status | Done: `RunState` starts from ShopID; integer candy; D-011 end checks; ended runs reject mutation. No chance roll, no `finalReward` |
+| M1-UI-1 | Title / Lobby / Shop Select hub | Done: portrait 1080×1920 Title auto-advances to Lobby; Shop Select uses enabled ShopTable rows; selected ShopID starts `RunState`; no run gameplay UI |
 | M1-4 | Action resolve: chance, turn cost, success/fail effects | Changing CSV chance/cost changes play without a code edit |
 | M1-5 | Required-action retry | After fail, the same required action can be chosen again until win/fail |
 | M1-6 | End checks: turns ≤ 0 or alert ≥ 100 fail; win not required in M1 if Escape is stubbed | Fail paths fire before any event UI |
@@ -18,7 +19,7 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 | M1-8 | Portrait temp UI 1080×1920: top stats, center text, bottom choices | Canvas Scaler + anchors; buttons show chance, turn cost, expected outcome |
 | M1-9 | Editor click stands in for touch | M1 loop completable in Play Mode on PC |
 
-**M1 exit:** PLAN M1 “Done when” is met. No shop-select, no full four-phase loop, no final art.
+**M1 exit:** PLAN M1 “Done when” is met. Hub Title/Lobby/Shop Select is M1-UI-1. No full four-phase loop, no final art.
 
 ## M2 — Full loop
 

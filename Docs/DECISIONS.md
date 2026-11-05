@@ -79,6 +79,16 @@ Owner example: two integer gains of 5 → run candy 10; `CandyMultiplier` 1.5 on
 - End check order: (1) `Alert >= GameConfig.MAX_ALERT` → fail, even if this action was a successful escape (2) else escape-action success and run candy ≥ `MIN_CANDY_TO_ESCAPE` → win, even if remaining turns are now 0 (3) else remaining turns ≤ 0 → fail (4) else continue.
 - Escape with candy 0 is not a win.
 
+### D-012 — M1-UI-1 hub screens (2026-11-05)
+
+**Decision:** v0.2 starts on a new Title scene, not `SampleScene`. Flow for this pass: Title → Lobby → Shop Select. Shop Select initializes `RunState` from the chosen `ShopID` and shows a temporary debug panel. Gameplay run UI is not in this pass.
+
+Lobby widgets (energy, gold, gold candy, gacha, companions, settings, profile) are **placeholders**. Taps show “준비 중”. They are not gameplay systems and do not grant run power.
+
+Title has no start button: show at least 1 second, then auto-enter Lobby when CSV load succeeds. Background Images are swappable later.
+
+**Why:** Owner requested the hub UI before M1-4 ActionResolver. GDD core loop remains Title → Shop Select for the heist; Lobby is an extra hub before shop select.
+
 ## Superseded — v0.1
 
 | Old decision | Status |

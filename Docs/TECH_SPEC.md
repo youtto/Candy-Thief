@@ -105,7 +105,9 @@ RNG: `UnityEngine.Random` unless P-006 requires a seed.
 
 ### UI
 
-- New Canvas scene or a dedicated UI object in a new scene (`TEMP` name: `RunUI`). Do not reuse `SampleScene` as the production HUD.
+- v0.2 start scene: `Assets/Scenes/V02/Title.unity` (D-012). Do not reuse `SampleScene` as the production HUD. `SampleScene` stays in the project, not first in Build Settings.
+- Hub screens in that scene: Title, Lobby, Shop Select, plus a temporary run-debug panel after shop pick. In-run `RunUI` is later.
+- New Canvas scene or a dedicated UI object in a new scene (`TEMP` name: `RunUI`).
 - Canvas Scaler: Scale With Screen Size, 1080×1920, match width or height `TBD` (`TEMP` match width 0.5).
 - Safe Area wrapper on the root.
 - One `ChoiceList` widget for required actions, optional actions, and event options.
