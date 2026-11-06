@@ -94,8 +94,8 @@ Selection: `TurnCost` > remaining turns is rejected with no state change. Equal 
 
 Order: reject if `TurnCost` > remaining → subtract `TurnCost` → success/fail deltas → end check (above) → event if still `InProgress`.
 
-- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). Not computed in M1-3.
-- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). Not computed in M1-3.
+- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). `ActionResolver` computes and rolls this (M1-4). Inject `IChanceRoll` in tests.
+- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). `ActionResolver` reports whether an event check is due; the roll itself is M1-7.
 - Candy during run: add integer `SuccessCandy` / `FailCandy` (and event-option candy). Do **not** multiply by `CandyMultiplier` per action (D-009).
 - Escape success (later): `finalReward = CeilToInt(runCandy × CandyMultiplier)`. Escape fail: `finalReward = 0`.
 - Required fail: keep the action choosable in the same phase while `InProgress`.

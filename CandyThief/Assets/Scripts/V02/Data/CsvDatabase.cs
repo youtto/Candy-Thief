@@ -107,7 +107,6 @@ public sealed class CsvDatabase
         }
 
         database.ParseLoadedTexts(tableTexts);
-        Current = database;
         return database;
     }
 

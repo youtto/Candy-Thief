@@ -12,7 +12,7 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 | M1-2 | CSV loader (UTF-8 BOM, header, lookup by ID) | Nine gameplay CSVs load; skip `README.csv`; missing/duplicate ID logs a clear error |
 | M1-3 | Run state: turns, alert, candy, phase, last action result, run status | Done: `RunState` starts from ShopID; integer candy; D-011 end checks; ended runs reject mutation. No chance roll, no `finalReward` |
 | M1-UI-1 | Title / Lobby / Shop Select hub | Done: portrait 1080×1920 Title auto-advances to Lobby; Shop Select uses enabled ShopTable rows; selected ShopID starts `RunState`; no run gameplay UI |
-| M1-4 | Action resolve: chance, turn cost, success/fail effects | Changing CSV chance/cost changes play without a code edit |
+| M1-4 | Action resolve: chance, turn cost, success/fail effects | Done: `ActionResolver` rolls `SuccessRate + Shop.SuccessRateBonusPp` (clamped); applies CSV cost/deltas via `RunState`; D-011 end checks. Event roll is M1-7. StageTable.xlsx is not loaded |
 | M1-5 | Required-action retry | After fail, the same required action can be chosen again until win/fail |
 | M1-6 | End checks: turns ≤ 0 or alert ≥ 100 fail; win not required in M1 if Escape is stubbed | Fail paths fire before any event UI |
 | M1-7 | Event roll after `EventEligible` actions; Enabled events; options; no chain | EVT_001–EVT_005 can appear from data; second event does not spawn after an option |
