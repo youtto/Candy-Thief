@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public interface IChanceRoll
@@ -44,7 +45,8 @@ public enum ActionRejectReason
     UnknownAction,
     WrongPhase,
     ShowCondition,
-    InsufficientTurns
+    InsufficientTurns,
+    NotRepeatable
 }
 
 public struct ActionResolveResult
@@ -97,6 +99,63 @@ public sealed class ActionResolver
         return chance;
     }
 
+    public ActionRejectReason EvaluateSelect(RunState run, string actionId, out ActionRow action)
+    {
+        action = null;
+        if (run == null)
+            return ActionRejectReason.MissingData;
+
+        if (run.IsEnded)
+            return ActionRejectReason.Ended;
+
+        if (database == null || !database.Loaded || database.HasErrors)
+            return ActionRejectReason.MissingData;
+
+        if (!database.TryGetAction(actionId, out action))
+            return ActionRejectReason.UnknownAction;
+
+        if (action.PhaseID != run.CurrentPhase)
+            return ActionRejectReason.WrongPhase;
+
+        if (!MeetsShowCondition(run, action))
+            return ActionRejectReason.ShowCondition;
+
+        if (!action.Repeatable && run.HasSucceededAction(action.ActionID))
+            return ActionRejectReason.NotRepeatable;
+
+        if (!run.CanAffordTurnCost(action.TurnCost))
+            return ActionRejectReason.InsufficientTurns;
+
+        if (!database.TryGetShop(run.ShopID, out _))
+            return ActionRejectReason.MissingData;
+
+        return ActionRejectReason.None;
+    }
+
+    public bool CanSelect(RunState run, string actionId)
+    {
+        ActionRow action;
+        return EvaluateSelect(run, actionId, out action) == ActionRejectReason.None;
+    }
+
+    public void CollectAvailableActions(RunState run, List<ActionRow> destination)
+    {
+        if (destination == null)
+            return;
+
+        destination.Clear();
+        if (database == null || !database.Loaded || database.HasErrors)
+            return;
+
+        var actions = database.EnabledActions;
+        for (int i = 0; i < actions.Count; i++)
+        {
+            ActionRow selected;
+            if (EvaluateSelect(run, actions[i].ActionID, out selected) == ActionRejectReason.None)
+                destination.Add(selected);
+        }
+    }
+
     public bool TryResolve(RunState run, string actionId, out ActionResolveResult result)
     {
         result = new ActionResolveResult
@@ -105,69 +164,16 @@ public sealed class ActionResolver
             RejectReason = ActionRejectReason.None
         };
 
-        if (run == null)
-        {
-            result.RejectReason = ActionRejectReason.MissingData;
-            Debug.LogError(LogPrefix + "RunState가 없습니다.");
-            return false;
-        }
-
-        if (run.IsEnded)
-        {
-            result.RejectReason = ActionRejectReason.Ended;
-            Debug.LogError(LogPrefix + "종료된 런은 행동을 실행할 수 없습니다. Status=" + run.Status);
-            return false;
-        }
-
-        if (database == null || !database.Loaded || database.HasErrors)
-        {
-            result.RejectReason = ActionRejectReason.MissingData;
-            Debug.LogError(LogPrefix + "CSV가 준비되지 않았습니다.");
-            return false;
-        }
-
         ActionRow action;
-        if (!database.TryGetAction(actionId, out action))
+        result.RejectReason = EvaluateSelect(run, actionId, out action);
+        if (result.RejectReason != ActionRejectReason.None)
         {
-            result.RejectReason = ActionRejectReason.UnknownAction;
-            Debug.LogError(LogPrefix + "ActionID를 찾을 수 없습니다: " + actionId);
-            return false;
-        }
-
-        if (action.PhaseID != run.CurrentPhase)
-        {
-            result.RejectReason = ActionRejectReason.WrongPhase;
-            Debug.LogError(LogPrefix + "페이즈가 다른 행동입니다. action=" + action.ActionID
-                + " actionPhase=" + action.PhaseID
-                + " runPhase=" + run.CurrentPhase);
-            return false;
-        }
-
-        if (!MeetsShowCondition(run, action))
-        {
-            result.RejectReason = ActionRejectReason.ShowCondition;
-            Debug.LogError(LogPrefix + "표시 조건 미충족. action=" + action.ActionID
-                + " ShowCondition=" + action.ShowCondition
-                + " Candy=" + run.Candy);
-            return false;
-        }
-
-        if (!run.CanAffordTurnCost(action.TurnCost))
-        {
-            result.RejectReason = ActionRejectReason.InsufficientTurns;
-            Debug.LogError(LogPrefix + "턴이 부족합니다. action=" + action.ActionID
-                + " cost=" + action.TurnCost
-                + " remaining=" + run.RemainingTurns);
+            LogReject(run, action, result.ActionID, result.RejectReason);
             return false;
         }
 
         ShopRow shop;
-        if (!database.TryGetShop(run.ShopID, out shop))
-        {
-            result.RejectReason = ActionRejectReason.MissingData;
-            Debug.LogError(LogPrefix + "가게를 찾을 수 없습니다: " + run.ShopID);
-            return false;
-        }
+        database.TryGetShop(run.ShopID, out shop);
 
         int chance = ComputeSuccessChance(action, shop);
         bool success = chanceRoll.Succeeds(chance);
@@ -188,6 +194,45 @@ public sealed class ActionResolver
         if (result.EventCheckDue)
             Debug.Log(LogPrefix + "이벤트 판정 가능 (M1-7에서 추첨). chance=" + result.EventChance);
         return true;
+    }
+
+    void LogReject(RunState run, ActionRow action, string actionId, ActionRejectReason reason)
+    {
+        switch (reason)
+        {
+            case ActionRejectReason.MissingData:
+                if (run == null)
+                    Debug.LogError(LogPrefix + "RunState가 없습니다.");
+                else if (database == null || !database.Loaded || database.HasErrors)
+                    Debug.LogError(LogPrefix + "CSV가 준비되지 않았습니다.");
+                else
+                    Debug.LogError(LogPrefix + "가게를 찾을 수 없습니다: " + run.ShopID);
+                break;
+            case ActionRejectReason.Ended:
+                Debug.LogError(LogPrefix + "종료된 런은 행동을 실행할 수 없습니다. Status=" + run.Status);
+                break;
+            case ActionRejectReason.UnknownAction:
+                Debug.LogError(LogPrefix + "ActionID를 찾을 수 없습니다: " + actionId);
+                break;
+            case ActionRejectReason.WrongPhase:
+                Debug.LogError(LogPrefix + "페이즈가 다른 행동입니다. action=" + action.ActionID
+                    + " actionPhase=" + action.PhaseID
+                    + " runPhase=" + run.CurrentPhase);
+                break;
+            case ActionRejectReason.ShowCondition:
+                Debug.LogError(LogPrefix + "표시 조건 미충족. action=" + action.ActionID
+                    + " ShowCondition=" + action.ShowCondition
+                    + " Candy=" + run.Candy);
+                break;
+            case ActionRejectReason.NotRepeatable:
+                Debug.LogError(LogPrefix + "반복할 수 없는 행동입니다. action=" + action.ActionID);
+                break;
+            case ActionRejectReason.InsufficientTurns:
+                Debug.LogError(LogPrefix + "턴이 부족합니다. action=" + action.ActionID
+                    + " cost=" + action.TurnCost
+                    + " remaining=" + run.RemainingTurns);
+                break;
+        }
     }
 
     bool MeetsShowCondition(RunState run, ActionRow action)

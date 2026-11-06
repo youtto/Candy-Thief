@@ -23,11 +23,12 @@ Do not treat archived v0.1 rows as current rules.
 Win: candy ≥ 1 and Escape action success.  
 Fail: turns ≤ 0 or alert ≥ 100.  
 End checks beat event spawn.  
-Last-turn escape, selection gate, and alert-vs-escape overlap are in D-011.
+Last-turn escape, selection gate, and alert-vs-escape overlap are in D-011.  
+Escape uses the same success-chance formula as other actions; meeting conditions does not auto-succeed (D-014).
 
 ### D-003 — Actions and events
 
-Actions split required / optional. Each has success chance and fixed turn cost from tables. Failure spends turns and raises alert. Required actions may be retried while the run continues. Events may roll after any completed action using `GameConfig` / `ShopTable`, then `EventTable` / `EventOptionTable`. No chained event after an option. Lookup is by ID, never by display text.
+Actions split required / optional. Each has success chance and fixed turn cost from tables. Failure spends turns and raises alert. Required actions may be retried while the run continues. `Repeatable` meaning is D-013. Events may roll after any completed action using `GameConfig` / `ShopTable`, then `EventTable` / `EventOptionTable`. No chained event after an option. Lookup is by ID, never by display text.
 
 ### D-004 — Meta
 
@@ -77,7 +78,9 @@ Owner example: two integer gains of 5 → run candy 10; `CandyMultiplier` 1.5 on
 - An action with `TurnCost` > remaining turns cannot be selected. `TurnCost` equal to remaining turns is allowed.
 - Resolve order: (1) subtract `TurnCost` (2) apply success/fail candy / alert / turn deltas (3) end check (4) event only if still in progress. Do not reorder.
 - End check order: (1) `Alert >= GameConfig.MAX_ALERT` → fail, even if this action was a successful escape (2) else escape-action success and run candy ≥ `MIN_CANDY_TO_ESCAPE` → win, even if remaining turns are now 0 (3) else remaining turns ≤ 0 → fail (4) else continue.
+- Last-turn escape fail is not a win. After TurnCost and deltas, use this same end-check order.
 - Escape with candy 0 is not a win.
+- Escape chance roll is D-014. Do not skip it because candy / phase / last-turn conditions are already met.
 
 ### D-012 — M1-UI-1 hub screens (2026-11-05)
 
@@ -88,6 +91,32 @@ Lobby widgets (energy, gold, gold candy, gacha, companions, settings, profile) a
 Title has no start button: show at least 1 second, then auto-enter Lobby when CSV load succeeds. Background Images are swappable later.
 
 **Why:** Owner requested the hub UI before M1-4 ActionResolver. GDD core loop remains Title → Shop Select for the heist; Lobby is an extra hub before shop select.
+
+### D-013 — Repeatable is post-success reappearance (2026-11-06)
+
+**Decision:** `Repeatable` on `ActionTable` / `EventTable` is not an attempt counter. It is whether a row may reappear after a **success** in the same run.
+
+- `Repeatable=1`: may be chosen again after success or fail, if other selection rules still pass (phase, `ShowCondition`, `TurnCost`, run still live).
+- `Repeatable=0`: may be chosen again after **fail**. After **success**, it cannot be chosen again in that run.
+- Eligibility to reappear is separate from spawn / roll chance. Do not treat `Repeatable` as a probability.
+
+**Why:** Owner corrected M1-5. GDD had tied required fail-retry to “`Repeatable=1` on current rows”, which read as fail-retry only when Repeatable=1. Fail never consumes the row.
+
+**Follow-through:** M1-5 action select records successful ActionIDs only. Phase change can still hide a row (`WrongPhase`) even when Repeatable=1. **M1-7 event pick must apply this same meaning to `EventTable.Repeatable`:** a failed event may stay a candidate; a Repeatable=0 event that resolved successfully must not reappear this run. Weight / trigger chance stay M1-7. Do not implement event roll in M1-5.
+
+### D-014 — Escape uses the same success roll (2026-11-06)
+
+**Decision:** M1-6 QA conflict closed. Escape actions use the same success-chance check as other actions. Stage clear requires a successful escape-phase roll. Meeting escape conditions does not auto-succeed.
+
+- Formula unchanged: `clamp(SuccessRate + Shop.SuccessRateBonusPp, MIN_SUCCESS_RATE, MAX_SUCCESS_RATE)`.
+- `ACT_010`–`ACT_012` (ESCAPE) and `ACT_013` (LOOT → ESCAPE) all use this roll. `ACT_013` success is a phase change, not a win.
+- Last-turn escape success still wins at 0 remaining turns (D-011).
+- Last-turn escape fail follows D-011 end-check order (alert ≥ max first, else remaining turns 0 fail).
+- Players choose among current ESCAPE rows for chance vs turn cost. Do not add extra safer escape rows, and do not change current `SuccessRate` / `ShowCondition` / turn values, until those rates and unlocks are approved.
+
+**Why:** Owner corrected `ActionTable` `ACT_013` Notes (“성공 확률 판정 없이”) vs the GDD/WBS chance formula. Push Your Luck needs a real escape roll.
+
+**Follow-through:** Keep `ActionResolver` chance formula and D-011 end checks. Fix `ACT_013` Notes only. EventEligible / event pick stay M1-7.
 
 ## Superseded — v0.1
 
@@ -131,3 +160,5 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 | EffectTable vs option columns | MVP uses Action/EventOption numeric columns; EffectTable rows are Implemented=0 |
 | Candy × multiplier per action vs D-009 | D-009: integer accumulate during run; multiplier once on escape success with `CeilToInt`; floor discarded |
 | Turns 0 always fail vs last-turn escape | D-011: turns 0 fails unless this action was a successful escape with candy ≥ min; alert ≥ max still wins the fail check |
+| Repeatable=1-only fail retry vs D-013 | D-013: fail-retry for Repeatable 0 and 1; Repeatable=0 blocks only after success. Confirm again at M1-7 event pick |
+| ACT_013 Notes skip-roll vs GDD chance formula | D-014: escape and ACT_013 use the same success roll; meeting conditions does not auto-win; Notes updated; no new escape rows |

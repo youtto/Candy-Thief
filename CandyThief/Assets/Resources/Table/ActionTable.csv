@@ -11,4 +11,4 @@ ACT_009,LOOT,REQUIRED,금고 털기,고위험 고보상,30,3,30,700,0,0,0,0,1,AL
 ACT_010,ESCAPE,REQUIRED,정문 탈출,조심스럽게 탈출한다,80,3,10,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
 ACT_011,ESCAPE,REQUIRED,담장 넘기,담장을 넘어서 탈출한다,60,2,20,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
 ACT_012,ESCAPE,REQUIRED,하수구 탈출,빠르게 도망친다,30,1,30,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
-ACT_013,LOOT,OPTIONAL,서둘러 탈출 준비,추가 털이를 종료하고 탈출한다,100,0,0,0,0,0,0,0,1,CANDY_AT_LEAST_1,ESCAPE,0,1,성공 확률 판정 없이 페이즈 전환
+ACT_013,LOOT,OPTIONAL,서둘러 탈출 준비,추가 털이를 종료하고 탈출한다,100,0,0,0,0,0,0,0,1,CANDY_AT_LEAST_1,ESCAPE,0,1,일반 행동과 동일한 성공률 판정 후 ESCAPE 전환. 조건 충족만으로 자동 성공하지 않음

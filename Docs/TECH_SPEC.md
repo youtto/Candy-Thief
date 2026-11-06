@@ -99,6 +99,7 @@ Order: reject if `TurnCost` > remaining → subtract `TurnCost` → success/fail
 - Candy during run: add integer `SuccessCandy` / `FailCandy` (and event-option candy). Do **not** multiply by `CandyMultiplier` per action (D-009).
 - Escape success (later): `finalReward = CeilToInt(runCandy × CandyMultiplier)`. Escape fail: `finalReward = 0`.
 - Required fail: keep the action choosable in the same phase while `InProgress`.
+- Repeatable column: D-013 (post-success reappearance, not attempt count). Re-check when implementing M1-7 event pick; do not treat it as roll chance.
 - Event only if `EventEligible=1` (and fail-path if `EVENT_ON_FAILED_ACTION=1`). Filter tags/phase/alert/turns, then weighted pick. After an option, stop.
 
 RNG: `UnityEngine.Random` unless P-006 requires a seed.

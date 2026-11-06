@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum RunStatus
@@ -44,6 +46,7 @@ public sealed class RunState
     int maxAlert;
     int minCandyToEscape;
     string escapePhaseId;
+    readonly HashSet<string> successfulActionIds = new HashSet<string>(StringComparer.Ordinal);
 
     public string ShopID { get; private set; }
     public string CurrentPhase { get; private set; }
@@ -128,6 +131,11 @@ public sealed class RunState
     public bool CanSelectAction(ActionRow action)
     {
         return action != null && CanAffordTurnCost(action.TurnCost);
+    }
+
+    public bool HasSucceededAction(string actionId)
+    {
+        return !string.IsNullOrEmpty(actionId) && successfulActionIds.Contains(actionId);
     }
 
     public bool ApplyCandyDelta(int delta)
@@ -237,6 +245,8 @@ public sealed class RunState
         RemainingTurns = ClampNonNegative(RemainingTurns + resolved.TurnDelta);
         LastActionID = resolved.ActionID ?? string.Empty;
         LastActionResult = resolved.Success ? RunActionResult.Success : RunActionResult.Fail;
+        if (resolved.Success && !string.IsNullOrEmpty(LastActionID))
+            successfulActionIds.Add(LastActionID);
 
         EvaluateEndConditions(resolved.Success && resolved.IsEscapeAction);
         if (Status == RunStatus.Won && ShouldAdvancePhase(resolved))
