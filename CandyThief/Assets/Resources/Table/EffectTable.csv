@@ -1,4 +1,4 @@
 ﻿EffectID,EffectType,Value,DurationActions,Target,Description,Implemented,Enabled,Notes
 EFF_001,NEXT_ACTION_RATE_BONUS_PP,20,1,PLAYER,다음 일반 행동 성공률 +20%p,0,0,MVP 제외. 효과 처리기 구현 후 활성화
-EFF_002,ALERT_DELTA,-10,0,PLAYER,경계도 10 감소,0,0,MVP에서는 EventOptionTable 기본 컬럼 우선 사용
+EFF_002,ALERT_DELTA,-10,0,PLAYER,위험도 10 감소,0,0,MVP에서는 EventOptionTable 기본 컬럼 우선 사용
 EFF_003,TURN_DELTA,2,0,PLAYER,턴 2 회복,0,0,MVP에서는 EventOptionTable 기본 컬럼 우선 사용

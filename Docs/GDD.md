@@ -17,7 +17,7 @@ Change reason is recorded in `Docs/DECISIONS.md` (D-001).
 
 ## Pitch
 
-사탕 가게에 잠입해, 턴과 경계도를 깎아가며 행동을 고르는 단판형 Push Your Luck 게임. 성공 확률을 보고 더 가져갈지, 지금 탈출할지 고른다. 한 판은 3~5분.
+사탕 가게에 잠입해, 턴과 위험도를 깎아가며 행동을 고르는 단판형 Push Your Luck 게임. 성공 확률을 보고 더 가져갈지, 지금 탈출할지 고른다. 한 판은 3~5분.
 
 ## Target
 
@@ -114,18 +114,21 @@ Do not put probabilities, turn costs, or alert deltas in C#. Enabled rows only (
 
 | Rule | Spec |
 |---|---|
-| When | After a general action with `EventEligible=1`, success or fail (`EVENT_ON_FAILED_ACTION=1`), if the run is still live |
-| Chance | `clamp(EVENT_TRIGGER_RATE + Shop.EventRateBonusPp, 0, 100)` percent |
-| Cap | `MAX_EVENT_PER_ACTION` (1). `EVENT_CHAIN_ENABLED=0` |
-| Candidates | `Enabled=1` rows matching `PhaseFilter` (or `ALL`), overlapping `EventTags` ∩ `Shop.AllowedEventTags` (`\|` separator), alert/turns windows, then `Weight` pick |
-| Options | `EventOptionTable` for that `EventID`. MVP applies option columns (`SuccessRate`, `TurnCost`, candy/alert/turn deltas). `SuccessEffectID`/`FailEffectID` are `NONE` |
+| When | After a general action with `EventEligible=1`, success or fail (`EVENT_ON_FAILED_ACTION=1`), if the run is still live (D-015) |
+| Chance | `clamp(EVENT_TRIGGER_RATE + Shop.EventRateBonusPp, 0, 100)` percent. This is trigger chance, not `Weight` |
+| Cap | `MAX_EVENT_PER_ACTION` (1). `EVENT_CHAIN_ENABLED=0`. At most one event per action; no draw after an option |
+| Candidates | `Enabled=1`; `PhaseFilter` is `ALL` or the **pre-action** phase; `EventTags` ∩ `Shop.AllowedEventTags` (`\|`); inclusive `MinAlert`–`MaxAlert` and `MinRemainingTurn`–`MaxRemainingTurn` using **post-action** alert/turns; Repeatable (D-013). Then `Weight` pick among remaining rows |
+| Options | `EventOptionTable` for that `EventID`. Chance `%` = `clamp(SuccessRate + Shop.SuccessRateBonusPp, MIN_SUCCESS_RATE, MAX_SUCCESS_RATE)`. Apply `TurnCost` then candy/alert/turn deltas. `SuccessEffectID`/`FailEffectID` are `NONE` |
+| Success | The chosen option’s chance roll succeeds. Appearance or picking an option is not success (D-015) |
+| Pending | Drawn `EventID` is pending until a valid option of that event resolves (or the run ends). Actions cannot be selected or applied while pending |
+| LastActionID | Stays the triggering action after an option. `OptionID` is not an ActionID |
 | Chain | After an option resolves, no second event |
-| Repeatable | Same post-success meaning as actions (D-013). Failed events may remain candidates. Eligibility ≠ `Weight` / trigger chance |
-| Priority | Run-end check > event |
+| Repeatable | Same post-success meaning as actions (D-013) on `EventID`. Failed events may remain candidates. Eligibility ≠ `Weight` / trigger chance |
+| Priority | Run-end check > event. Options are not escape actions and cannot win |
 
 M1 uses every `EventTable` row with `Enabled=1` (currently EVT_001–EVT_005), not a hardcoded count of 3.
 
-M1-7 event pick must apply D-013 to `EventTable.Repeatable`. Do not treat Repeatable as a roll chance.
+Draw eligibility (`EventCheckDue`), candidate eligibility, trigger chance, and `Weight` pick are separate (D-015).
 
 ## Candy
 
@@ -208,7 +211,7 @@ Condition tokens (`NONE`, `ALWAYS`, `CANDY_AT_LEAST_1`, `REQUIRED_ACTION_SUCCESS
 
 Current enabled actions: MOVE `ACT_001`–`ACT_003`; INFILTRATE `ACT_004`–`ACT_006`; LOOT required `ACT_007`–`ACT_009`; LOOT optional `ACT_013`; ESCAPE `ACT_010`–`ACT_012`.
 
-**EventTable** — `EventID` PK. Columns: `EventName`, `EventDescription`, `PhaseFilter`, `EventTags`, `Weight`, `MinAlert`, `MaxAlert`, `MinRemainingTurn`, `MaxRemainingTurn`, `Repeatable` (D-013; confirm at M1-7), `ImageKey` → `AssetTable.ImageKey`, `Enabled`, `Notes`. Enabled: `EVT_001`–`EVT_005`.
+**EventTable** — `EventID` PK. Columns: `EventName`, `EventDescription`, `PhaseFilter`, `EventTags`, `Weight`, `MinAlert`, `MaxAlert`, `MinRemainingTurn`, `MaxRemainingTurn`, `Repeatable` (D-013 / D-015: after option success, not attempt count), `ImageKey` → `AssetTable.ImageKey`, `Enabled`, `Notes`. Enabled: `EVT_001`–`EVT_005`.
 
 **EventOptionTable** — `OptionID` PK, `EventID` FK, `OptionOrder`. Outcome columns on the option row. `SuccessEffectID` / `FailEffectID` are `NONE` for MVP.
 
@@ -234,17 +237,21 @@ Stack: Unity uGUI + TextMeshPro (already available via `com.unity.ugui`).
 
 Screen layout:
 
-- Top: remaining turns, alert, candy
+- Top: remaining turns (hourglass + large number), 위험도 gauge (`Alert / MAX_ALERT`, UI label only), candy
 - Center: situation, event/action illustration, description
-- Bottom: choices with success chance, turn cost, expected reward/penalty
+- Bottom: choice cards with name, success chance, turn cost, non-zero success/fail effects, description
 
 M1: placeholder UI only. Final art in later milestones.
 
-Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). Result and the in-run choice UI remain later. Title / result / shop-select were originally M2; Title and Shop Select stubs are now pulled forward.
+Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). In-run placeholder HUD is M1-8 (`RunHud` prefab). Choice results use M1-8.5 feedback (D-016): comic success/fail copy, character reaction, actual snapshot deltas, then `[계속]`. Result screen remains M1-9 / M2.
 
 ## Art direction (still valid)
 
-Cute but kitschy low-detail pixel art. Candy-shop pastel (mint / sky-blue / pink / yellow / purple). Avoid heart-heavy ornamentation. Small readable silhouettes. Art is replaceable. Prototype with placeholders. Existing Ninja Adventure temp art stays in the project; v0.2 M1 does not require it.
+Official style: Korean casual-mobile kitschy 2D cartoon — large round SD characters, thick even dark-brown outlines, clear color blocks, simple geometry, minimal cell shading, exaggerated comic poses. Cute but not overly feminine or decorative. Candy-shop pastel (mint / sky-blue / pink / yellow / purple) is allowed; do not flood UI with pink, hearts, ribbons, or sparkles. Small readable silhouettes.
+
+Art style source of truth: `Docs/Art/ART_STYLE_GUIDE.md` (v0.2). Official visual references: approved `REF-*` files in `Docs/Art/References/`. Character, background, and UI *look* follow those docs; UI function and data stay in this GDD, TECH_SPEC, DECISIONS, and the current build.
+
+Art is replaceable. Prototype with placeholders. Existing Ninja Adventure temp art stays in the project; v0.2 M1 does not require it.
 
 ## Out of scope
 
@@ -292,6 +299,7 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 7. Save format (PlayerPrefs vs JSON). `TEMP`: PlayerPrefs for M4.
 8. When to generate `AssetTable` PNGs (not needed for M1 placeholders).
 9. Whether escape skips the success roll — **closed (D-014):** same formula as other actions; meeting conditions does not auto-succeed. Extra safer escape rows (rates / unlocks) stay **open**; do not add them.
+10. Event success timing, PhaseFilter snapshot, option shop bonus, pending — **closed (D-015).**
 
 ---
 

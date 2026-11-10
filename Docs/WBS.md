@@ -15,9 +15,10 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 | M1-4 | Action resolve: chance, turn cost, success/fail effects | Done: `ActionResolver` rolls `SuccessRate + Shop.SuccessRateBonusPp` (clamped); applies CSV cost/deltas via `RunState`; D-011 end checks. Event roll is M1-7. StageTable.xlsx is not loaded |
 | M1-5 | Required-action retry | After fail, the same required action can be chosen again until win/fail |
 | M1-6 | End checks: turns ≤ 0 or alert ≥ 100 fail; win not required in M1 if Escape is stubbed | Fail paths fire before any event UI |
-| M1-7 | Event roll after `EventEligible` actions; Enabled events; options; no chain | EVT_001–EVT_005 can appear from data; second event does not spawn after an option |
-| M1-8 | Portrait temp UI 1080×1920: top stats, center text, bottom choices | Canvas Scaler + anchors; buttons show chance, turn cost, expected outcome |
-| M1-9 | Editor click stands in for touch | M1 loop completable in Play Mode on PC |
+| M1-7 | Event roll after `EventEligible` actions; Enabled events; options; no chain | Done: `EventResolver` draws after `EventCheckDue`; EVT_001–EVT_005 can appear from data; pending options; no chain. Editor 66/66 (EventResolver 23 + RunState 11 + ActionResolver 32) |
+| M1-8 | Portrait temp UI 1080×1920: top stats, center text, bottom choices | Done: `RunHud` prefab under Title SafeArea; shared ChoiceList for actions/events; chance, turn cost, success/fail outcomes from CSV. Editor 74/74 + Play Mode HUD smoke |
+| M1-8.5 | Result feedback + presentation polish | Done: optional `ResultFeedbackTable`; snapshot deltas; lock → anticipate → reveal → hold → `[계속]`; event UI after Continue; success/fail chibi reactions; Hangul wrap/scroll. Editor 74 + ResultFeedback 11. Result screen is M1-9 |
+| M1-9 | Editor click stands in for touch | M1 loop completable in Play Mode on PC. Result screen + title/lobby return hook from `EndedRunContinued` |
 
 **M1 exit:** PLAN M1 “Done when” is met. Hub Title/Lobby/Shop Select is M1-UI-1. No full four-phase loop, no final art.
 

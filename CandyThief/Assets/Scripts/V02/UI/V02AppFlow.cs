@@ -24,12 +24,15 @@ public class V02AppFlow : MonoBehaviour
     RectTransform lobbyScreen;
     RectTransform shopScreen;
     RectTransform debugScreen;
+    RectTransform runHudScreen;
     RectTransform comingSoon;
     RectTransform currentScreen;
     TextMeshProUGUI comingSoonText;
     TextMeshProUGUI titleStatus;
     TextMeshProUGUI debugBody;
     Transform shopList;
+    RectTransform safeArea;
+    V02RunHud runHud;
 
     void Awake()
     {
@@ -118,6 +121,7 @@ public class V02AppFlow : MonoBehaviour
 
         RectTransform safe = V02Ui.CreateStretch("SafeArea", canvasGo.transform);
         safe.gameObject.AddComponent<SafeAreaFitter>();
+        safeArea = safe;
 
         titleScreen = BuildTitle(safe);
         lobbyScreen = BuildLobby(safe);
@@ -323,7 +327,7 @@ public class V02AppFlow : MonoBehaviour
         label.text = shop.ShopName + "\n"
             + "난이도 " + shop.Difficulty
             + "  ·  시작 턴 " + shop.StartTurn
-            + "  ·  시작 경계도 " + shop.StartAlert
+            + "  ·  시작 위험도 " + shop.StartAlert
             + "\n사탕 보상 배율 ×"
             + shop.CandyMultiplier.ToString("0.0", CultureInfo.InvariantCulture);
         RectTransform textRect = label.rectTransform;
@@ -343,16 +347,53 @@ public class V02AppFlow : MonoBehaviour
             return;
         }
 
-        debugBody.text =
-            "ShopID: " + run.ShopID + "\n"
-            + "Phase: " + run.CurrentPhase + "\n"
-            + "Turns: " + run.RemainingTurns + "\n"
-            + "Alert: " + run.Alert + "\n"
-            + "Candy: " + run.Candy + "\n"
-            + "Status: " + run.Status + "\n\n"
-            + "게임플레이 화면은 아직 없습니다.";
         run.LogSnapshot("shop selected");
-        Show(debugScreen);
+        if (!TryShowRunHud(database, run))
+        {
+            debugBody.text =
+                "ShopID: " + run.ShopID + "\n"
+                + "Phase: " + run.CurrentPhase + "\n"
+                + "Turns: " + run.RemainingTurns + "\n"
+                + "Alert: " + run.Alert + "\n"
+                + "Candy: " + run.Candy + "\n"
+                + "Status: " + run.Status + "\n\n"
+                + "런 HUD 프리팹을 찾지 못했습니다.";
+            Show(debugScreen);
+        }
+    }
+
+    bool TryShowRunHud(CsvDatabase database, RunState run)
+    {
+        if (runHud == null)
+        {
+            V02RunHud prefab = Resources.Load<V02RunHud>(V02RunHud.ResourcePath);
+            if (prefab == null)
+            {
+                Debug.LogError("[V02] 런 HUD 프리팹이 없습니다: Resources/" + V02RunHud.ResourcePath);
+                return false;
+            }
+
+            runHud = Instantiate(prefab, safeArea != null ? safeArea : transform);
+            runHud.name = "RunHud";
+            runHudScreen = runHud.Rect;
+            V02Ui.Stretch(runHudScreen);
+            V02Ui.AddCanvasGroup(runHudScreen);
+        }
+
+        runHud.Bind(database, run, ShowLobby);
+        if (runHud.ResultPresentation != null)
+        {
+            runHud.ResultPresentation.EndedRunContinued.RemoveListener(OnEndedRunContinued);
+            runHud.ResultPresentation.EndedRunContinued.AddListener(OnEndedRunContinued);
+        }
+
+        Show(runHudScreen);
+        return true;
+    }
+
+    void OnEndedRunContinued()
+    {
+        Debug.Log("[V02] 런 종료 피드백 확인. Result 화면은 M1-9에서 연결합니다.");
     }
 
     void ShowComingSoon(string featureName)
@@ -405,6 +446,7 @@ public class V02AppFlow : MonoBehaviour
         ApplyVisible(lobbyScreen, screen == lobbyScreen);
         ApplyVisible(shopScreen, screen == shopScreen);
         ApplyVisible(debugScreen, screen == debugScreen);
+        ApplyVisible(runHudScreen, screen == runHudScreen);
         if (comingSoon != null && screen != comingSoon)
             comingSoon.gameObject.SetActive(false);
         currentScreen = screen;

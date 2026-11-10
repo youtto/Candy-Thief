@@ -46,6 +46,7 @@ public sealed class CsvDatabase
     readonly Dictionary<string, AssetRow> assetsById = new Dictionary<string, AssetRow>(StringComparer.Ordinal);
     readonly Dictionary<string, AssetRow> assetsByImageKey = new Dictionary<string, AssetRow>(StringComparer.Ordinal);
     readonly Dictionary<string, EffectRow> effects = new Dictionary<string, EffectRow>(StringComparer.Ordinal);
+    readonly Dictionary<string, ResultFeedbackRow> resultFeedbackByKey = new Dictionary<string, ResultFeedbackRow>(StringComparer.Ordinal);
 
     readonly List<ShopRow> shopsOrdered = new List<ShopRow>();
     readonly List<PhaseRow> phasesOrdered = new List<PhaseRow>();
@@ -55,6 +56,7 @@ public sealed class CsvDatabase
     readonly List<AchievementRow> achievementsOrdered = new List<AchievementRow>();
     readonly List<AssetRow> assetsOrdered = new List<AssetRow>();
     readonly List<EffectRow> effectsOrdered = new List<EffectRow>();
+    readonly List<ResultFeedbackRow> resultFeedbackOrdered = new List<ResultFeedbackRow>();
 
     readonly HashSet<string> allShopIds = new HashSet<string>(StringComparer.Ordinal);
     readonly HashSet<string> allPhaseIds = new HashSet<string>(StringComparer.Ordinal);
@@ -65,6 +67,7 @@ public sealed class CsvDatabase
     readonly HashSet<string> allAssetIds = new HashSet<string>(StringComparer.Ordinal);
     readonly HashSet<string> allImageKeys = new HashSet<string>(StringComparer.Ordinal);
     readonly HashSet<string> allEffectIds = new HashSet<string>(StringComparer.Ordinal);
+    readonly HashSet<string> allFeedbackIds = new HashSet<string>(StringComparer.Ordinal);
 
     public bool Loaded { get; private set; }
     public bool HasErrors { get; private set; }
@@ -78,6 +81,7 @@ public sealed class CsvDatabase
     public IReadOnlyList<AchievementRow> EnabledAchievements => achievementsOrdered;
     public IReadOnlyList<AssetRow> EnabledAssets => assetsOrdered;
     public IReadOnlyList<EffectRow> EnabledEffects => effectsOrdered;
+    public IReadOnlyList<ResultFeedbackRow> EnabledResultFeedback => resultFeedbackOrdered;
 
     public static CsvDatabase LoadFromResources()
     {
@@ -92,6 +96,7 @@ public sealed class CsvDatabase
         }
 
         database.ParseLoadedTexts(texts);
+        database.TryLoadPresentationTableFromResources();
         Current = database;
         return database;
     }
@@ -107,6 +112,9 @@ public sealed class CsvDatabase
         }
 
         database.ParseLoadedTexts(tableTexts);
+        string feedbackText;
+        if (tableTexts != null && tableTexts.TryGetValue("ResultFeedbackTable", out feedbackText))
+            database.LoadPresentationTableText(feedbackText);
         return database;
     }
 
@@ -158,6 +166,16 @@ public sealed class CsvDatabase
     public bool TryGetEffect(string effectId, out EffectRow row)
     {
         return effects.TryGetValue(effectId, out row);
+    }
+
+    public bool TryGetResultFeedback(string sourceType, string sourceId, out ResultFeedbackRow row)
+    {
+        return resultFeedbackByKey.TryGetValue(FeedbackKey(sourceType, sourceId), out row);
+    }
+
+    public static string FeedbackKey(string sourceType, string sourceId)
+    {
+        return (sourceType ?? string.Empty) + "|" + (sourceId ?? string.Empty);
     }
 
     public int GetInt(string key)
@@ -289,6 +307,9 @@ public sealed class CsvDatabase
             case "EffectTable":
                 LoadEffects(sheet);
                 break;
+            case "ResultFeedbackTable":
+                LoadResultFeedback(sheet);
+                break;
             default:
                 Error("{0}은(는) 게임플레이 테이블이 아닙니다.", sheet.TableName);
                 break;
@@ -318,11 +339,19 @@ public sealed class CsvDatabase
 
     bool TryReadSheet(string tableName, string csvText, out CsvSheet sheet)
     {
+        return TryReadSheet(tableName, csvText, out sheet, false);
+    }
+
+    bool TryReadSheet(string tableName, string csvText, out CsvSheet sheet, bool presentation)
+    {
         sheet = null;
         List<string[]> records = CsvReader.ReadRecords(csvText);
         if (records.Count == 0)
         {
-            Error("{0} 헤더가 없습니다.", tableName);
+            if (presentation)
+                Warn("{0} 헤더가 없습니다. 기본 결과 문구를 사용합니다.", tableName);
+            else
+                Error("{0} 헤더가 없습니다.", tableName);
             return false;
         }
 
@@ -932,6 +961,127 @@ public sealed class CsvDatabase
         Info("{0} 로딩: 파싱 {1}행, 활성 {2}행, 비활성 건너뜀 {3}행", sheet.TableName, parsed, enabled, skipped);
     }
 
+    void TryLoadPresentationTableFromResources()
+    {
+        TextAsset asset = Resources.Load<TextAsset>(ResourceFolder + "/ResultFeedbackTable");
+        if (asset == null)
+        {
+            Info("ResultFeedbackTable이 없어 기본 결과 문구를 사용합니다.");
+            return;
+        }
+
+        LoadPresentationTableText(CsvReader.DecodeUtf8(asset.bytes));
+    }
+
+    void LoadPresentationTableText(string csvText)
+    {
+        if (string.IsNullOrWhiteSpace(csvText))
+        {
+            Warn("ResultFeedbackTable 파일이 비어 있습니다. 기본 결과 문구를 사용합니다.");
+            return;
+        }
+
+        CsvSheet sheet;
+        if (!TryReadSheet("ResultFeedbackTable", csvText, out sheet, true))
+            return;
+
+        LoadResultFeedback(sheet);
+    }
+
+    void LoadResultFeedback(CsvSheet sheet)
+    {
+        string[] required =
+        {
+            "FeedbackID", "SourceType", "SourceID", "SuccessText", "FailText",
+            "SuccessPresentationID", "FailPresentationID", "Enabled"
+        };
+        if (!sheet.RequireColumns(required))
+        {
+            Warn("ResultFeedbackTable 필수 컬럼이 없어 기본 결과 문구를 사용합니다.");
+            return;
+        }
+
+        int parsed = 0;
+        int enabled = 0;
+        int skipped = 0;
+        for (int i = 0; i < sheet.Rows.Count; i++)
+        {
+            string[] record = sheet.Rows[i];
+            int line = i + 2;
+            string id = sheet.Get(record, "FeedbackID");
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                Warn("ResultFeedbackTable {0}행: FeedbackID가 비어 건너뜁니다.", line);
+                continue;
+            }
+
+            if (!allFeedbackIds.Add(id))
+            {
+                Warn("ResultFeedbackTable {0}행: FeedbackID 중복 '{1}' 를 건너뜁니다.", line, id);
+                continue;
+            }
+
+            string enabledRaw = sheet.Get(record, "Enabled");
+            bool enabledFlag;
+            if (!TryConvertBool(enabledRaw, out enabledFlag))
+            {
+                Warn("ResultFeedbackTable {0}행: Enabled='{1}' 는 BOOL(0/1)이 아닙니다.", line, enabledRaw);
+                continue;
+            }
+
+            string sourceType = sheet.Get(record, "SourceType");
+            string sourceId = sheet.Get(record, "SourceID");
+            if (sourceType != "ACTION" && sourceType != "OPTION")
+            {
+                Warn("ResultFeedbackTable {0}행: SourceType '{1}' 는 ACTION 또는 OPTION 이어야 합니다.", line, sourceType);
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(sourceId))
+            {
+                Warn("ResultFeedbackTable {0}행: SourceID가 비어 건너뜁니다.", line);
+                continue;
+            }
+
+            var row = new ResultFeedbackRow
+            {
+                FeedbackID = id,
+                SourceType = sourceType,
+                SourceID = sourceId,
+                SuccessText = sheet.Get(record, "SuccessText"),
+                FailText = sheet.Get(record, "FailText"),
+                SuccessPresentationID = sheet.Get(record, "SuccessPresentationID"),
+                FailPresentationID = sheet.Get(record, "FailPresentationID"),
+                Enabled = enabledFlag,
+                Notes = sheet.Get(record, "Notes")
+            };
+            parsed++;
+            if (!row.Enabled)
+            {
+                skipped++;
+                continue;
+            }
+
+            string key = FeedbackKey(sourceType, sourceId);
+            if (resultFeedbackByKey.ContainsKey(key))
+            {
+                Warn("ResultFeedbackTable {0}행: {1} {2} 중복을 건너뜁니다.", line, sourceType, sourceId);
+                continue;
+            }
+
+            if (sourceType == "ACTION" && !allActionIds.Contains(sourceId))
+                Warn("ResultFeedbackTable {0}: SourceID '{1}' 가 ActionTable에 없습니다. 문구는 로드합니다.", id, sourceId);
+            if (sourceType == "OPTION" && !allOptionIds.Contains(sourceId))
+                Warn("ResultFeedbackTable {0}: SourceID '{1}' 가 EventOptionTable에 없습니다. 문구는 로드합니다.", id, sourceId);
+
+            resultFeedbackByKey.Add(key, row);
+            resultFeedbackOrdered.Add(row);
+            enabled++;
+        }
+
+        Info("{0} 로딩: 파싱 {1}행, 활성 {2}행, 비활성 건너뜀 {3}행", sheet.TableName, parsed, enabled, skipped);
+    }
+
     void ValidateReferences()
     {
         for (int i = 0; i < shopsOrdered.Count; i++)
@@ -1158,6 +1308,11 @@ public sealed class CsvDatabase
     void Info(string format, params object[] args)
     {
         Debug.Log(LogPrefix + string.Format(CultureInfo.InvariantCulture, format, args));
+    }
+
+    void Warn(string format, params object[] args)
+    {
+        Debug.LogWarning(LogPrefix + string.Format(CultureInfo.InvariantCulture, format, args));
     }
 
     void Error(string format, params object[] args)

@@ -118,6 +118,36 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 
 **Follow-through:** Keep `ActionResolver` chance formula and D-011 end checks. Fix `ACT_013` Notes only. EventEligible / event pick stay M1-7.
 
+### D-015 — Event draw and option resolution (2026-11-09)
+
+**Decision:** M1-7 event processing is closed.
+
+- Event success is the chosen option’s success-chance roll succeeding. A failed option roll is event failure. Appearing, or merely picking an option, is not success. A 100% option still uses the final chance formula.
+- `PhaseFilter` uses the **pre-action** phase of the action that triggered the check. Post-action `CurrentPhase` is not used for this filter. `ActionResolver` action-select logic stays unchanged; the caller snapshots the phase and passes it to `EventResolver`.
+- Candidate filter (all required): `Enabled=1`, `PhaseFilter` (`ALL` or pre-action phase), `EventTags` ∩ `Shop.AllowedEventTags`, inclusive `MinAlert`–`MaxAlert`, inclusive `MinRemainingTurn`–`MaxRemainingTurn`, Repeatable (D-013). Alert/turns are read **after** the action’s D-011 end check.
+- Draw eligibility (`EventCheckDue`), candidate eligibility, trigger chance, and `Weight` pick are separate. `Weight` is not trigger chance.
+- Option chance `%` = `clamp(Option.SuccessRate + Shop.SuccessRateBonusPp, MIN_SUCCESS_RATE, MAX_SUCCESS_RATE)` — same formula as actions, bonus in percentage points. Do not change CSV numbers.
+- A drawn event sets pending `EventID`. While pending, actions cannot be selected or applied. Only a valid option of that event may resolve it. After the option (including if the run ends), clear pending. A foreign `OptionID` cannot resolve the pending event.
+- After an option, `LastActionID` stays the triggering action. Do not store `OptionID` as an ActionID. `successfulActionIds` and `successfulEventIds` are separate.
+- No chain: `EVENT_CHAIN_ENABLED=0`, `MAX_EVENT_PER_ACTION=1`. At most one event per action. Do not draw after an option.
+- Event options are not escape actions. Option success cannot win. D-011 end-check order is reused, not copied.
+
+**Why:** Owner closed M1-7 planning questions (success timing, PhaseFilter snapshot, inclusive windows, option shop bonus, pending, LastActionID).
+
+**Follow-through:** New `EventResolver`. `ActionResolver` still only reports `EventCheckDue` / `ComputeEventChance` and does not draw inside `TryResolve`. WBS M1-7 Done after Unity Editor 66/66 and QA PASS.
+
+### D-016 — Result feedback is presentation-only (2026-11-09)
+
+**Decision:** M1-8.5 result copy and reactions do not change Action / EventOption / Effect gameplay rules.
+
+- Optional 10th table `ResultFeedbackTable.csv` (`FeedbackID, SourceType, SourceID, SuccessText, FailText, SuccessPresentationID, FailPresentationID, Enabled, Notes`). Missing or invalid rows warn and fall back to display name; they do not set `HasErrors`.
+- UI shows `RunState` before/after snapshot deltas. Do not recompute CSV expected candy/alert/turn values for the result modal.
+- After a choice: lock input → resolve → short anticipate → reveal → hold. Tap skips only during anticipate/reveal. Hold advances only with `[계속]`.
+- Event **draw** timing stays D-015. Pending event UI appears after `[계속]` on the action result, not immediately.
+- A run-ending action still shows success/fail feedback. After `[계속]`, stay ended (no more choices). Result screen / title-lobby return is M1-9 via `EndedRunContinued`.
+
+**Why:** Owner approved M1-8.5 with P0 character reactions and `[계속]` hold UX.
+
 ## Superseded — v0.1
 
 | Old decision | Status |
@@ -160,5 +190,6 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 | EffectTable vs option columns | MVP uses Action/EventOption numeric columns; EffectTable rows are Implemented=0 |
 | Candy × multiplier per action vs D-009 | D-009: integer accumulate during run; multiplier once on escape success with `CeilToInt`; floor discarded |
 | Turns 0 always fail vs last-turn escape | D-011: turns 0 fails unless this action was a successful escape with candy ≥ min; alert ≥ max still wins the fail check |
-| Repeatable=1-only fail retry vs D-013 | D-013: fail-retry for Repeatable 0 and 1; Repeatable=0 blocks only after success. Confirm again at M1-7 event pick |
+| Repeatable=1-only fail retry vs D-013 | D-013: fail-retry for Repeatable 0 and 1; Repeatable=0 blocks only after success. EventID uses the same meaning (D-015) |
 | ACT_013 Notes skip-roll vs GDD chance formula | D-014: escape and ACT_013 use the same success roll; meeting conditions does not auto-win; Notes updated; no new escape rows |
+| Event success timing / PhaseFilter snapshot | D-015: option chance roll; pre-action phase; inclusive alert/turn windows; pending blocks actions |

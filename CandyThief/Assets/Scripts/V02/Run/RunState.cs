@@ -47,6 +47,9 @@ public sealed class RunState
     int minCandyToEscape;
     string escapePhaseId;
     readonly HashSet<string> successfulActionIds = new HashSet<string>(StringComparer.Ordinal);
+    readonly HashSet<string> successfulEventIds = new HashSet<string>(StringComparer.Ordinal);
+    string pendingEventId = string.Empty;
+    bool eventCheckConsumed;
 
     public string ShopID { get; private set; }
     public string CurrentPhase { get; private set; }
@@ -60,6 +63,8 @@ public sealed class RunState
     public RunStatus Status { get; private set; }
     public RunFailReason FailReason { get; private set; }
     public bool IsEnded => Status != RunStatus.InProgress;
+    public string PendingEventID => pendingEventId ?? string.Empty;
+    public bool HasPendingEvent => !string.IsNullOrEmpty(PendingEventID);
 
     public static bool TryStart(CsvDatabase database, string shopId, out RunState state)
     {
@@ -114,7 +119,9 @@ public sealed class RunState
             LastActionID = string.Empty,
             LastActionResult = RunActionResult.None,
             Status = RunStatus.InProgress,
-            FailReason = RunFailReason.None
+            FailReason = RunFailReason.None,
+            pendingEventId = string.Empty,
+            eventCheckConsumed = false
         };
         if (state.Alert > state.maxAlert)
             state.Alert = state.maxAlert;
@@ -130,12 +137,50 @@ public sealed class RunState
 
     public bool CanSelectAction(ActionRow action)
     {
-        return action != null && CanAffordTurnCost(action.TurnCost);
+        return action != null && !HasPendingEvent && CanAffordTurnCost(action.TurnCost);
     }
 
     public bool HasSucceededAction(string actionId)
     {
         return !string.IsNullOrEmpty(actionId) && successfulActionIds.Contains(actionId);
+    }
+
+    public bool HasSucceededEvent(string eventId)
+    {
+        return !string.IsNullOrEmpty(eventId) && successfulEventIds.Contains(eventId);
+    }
+
+    public bool TryConsumeEventCheck()
+    {
+        if (IsEnded || HasPendingEvent || eventCheckConsumed)
+            return false;
+
+        eventCheckConsumed = true;
+        return true;
+    }
+
+    public bool TrySetPendingEvent(string eventId)
+    {
+        if (!EnsureInProgress("이벤트"))
+            return false;
+
+        if (HasPendingEvent)
+        {
+            Debug.LogError(LogPrefix + "이미 대기 중인 이벤트가 있습니다. pending=" + PendingEventID);
+            return false;
+        }
+
+        if (string.IsNullOrEmpty(eventId))
+            return false;
+
+        pendingEventId = eventId;
+        eventCheckConsumed = true;
+        return true;
+    }
+
+    public void ClearPendingEvent()
+    {
+        pendingEventId = string.Empty;
     }
 
     public bool ApplyCandyDelta(int delta)
@@ -232,6 +277,13 @@ public sealed class RunState
         if (!EnsureInProgress("행동"))
             return false;
 
+        if (HasPendingEvent)
+        {
+            Debug.LogError(LogPrefix + "이벤트 선택 중에는 행동을 실행할 수 없습니다. pending="
+                + PendingEventID + " action=" + resolved.ActionID);
+            return false;
+        }
+
         if (resolved.TurnCost > RemainingTurns)
         {
             Debug.LogError(LogPrefix + "턴이 부족합니다. cost=" + resolved.TurnCost
@@ -239,6 +291,7 @@ public sealed class RunState
             return false;
         }
 
+        eventCheckConsumed = false;
         RemainingTurns = ClampNonNegative(RemainingTurns - resolved.TurnCost);
         Candy = ClampNonNegative(Candy + resolved.CandyDelta);
         Alert = ClampAlert(Alert + resolved.AlertDelta);
@@ -258,6 +311,48 @@ public sealed class RunState
         if (resolved.Success && ShouldAdvancePhase(resolved))
             CurrentPhase = resolved.SuccessNextPhase;
 
+        return true;
+    }
+
+    public bool TryApplyEventOption(EventOptionRow option, bool success)
+    {
+        if (option == null)
+            return false;
+
+        if (!EnsureInProgress("이벤트 옵션"))
+            return false;
+
+        if (!HasPendingEvent)
+        {
+            Debug.LogError(LogPrefix + "대기 중인 이벤트가 없어 옵션을 적용할 수 없습니다. option="
+                + option.OptionID);
+            return false;
+        }
+
+        if (option.EventID != PendingEventID)
+        {
+            Debug.LogError(LogPrefix + "다른 이벤트의 옵션입니다. pending=" + PendingEventID
+                + " option=" + option.OptionID + " optionEvent=" + option.EventID);
+            return false;
+        }
+
+        if (option.TurnCost > RemainingTurns)
+        {
+            Debug.LogError(LogPrefix + "턴이 부족합니다. cost=" + option.TurnCost
+                + " remaining=" + RemainingTurns + " option=" + option.OptionID);
+            return false;
+        }
+
+        RemainingTurns = ClampNonNegative(RemainingTurns - option.TurnCost);
+        Candy = ClampNonNegative(Candy + (success ? option.SuccessCandy : option.FailCandy));
+        Alert = ClampAlert(Alert + (success ? option.SuccessAlert : option.FailAlert));
+        RemainingTurns = ClampNonNegative(RemainingTurns + (success ? option.SuccessTurnDelta : option.FailTurnDelta));
+        if (success)
+            successfulEventIds.Add(PendingEventID);
+
+        EvaluateEndConditions(false);
+        pendingEventId = string.Empty;
+        eventCheckConsumed = true;
         return true;
     }
 

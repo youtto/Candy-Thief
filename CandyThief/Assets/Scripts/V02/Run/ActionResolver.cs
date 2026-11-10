@@ -41,6 +41,7 @@ public enum ActionRejectReason
 {
     None,
     Ended,
+    EventPending,
     MissingData,
     UnknownAction,
     WrongPhase,
@@ -58,6 +59,13 @@ public struct ActionResolveResult
     public int SuccessChance;
     public bool EventCheckDue;
     public int EventChance;
+}
+
+public struct PresentedAction
+{
+    public ActionRow Action;
+    public bool CanExecute;
+    public ActionRejectReason ExecuteReason;
 }
 
 public sealed class ActionResolver
@@ -108,6 +116,9 @@ public sealed class ActionResolver
         if (run.IsEnded)
             return ActionRejectReason.Ended;
 
+        if (run.HasPendingEvent)
+            return ActionRejectReason.EventPending;
+
         if (database == null || !database.Loaded || database.HasErrors)
             return ActionRejectReason.MissingData;
 
@@ -156,6 +167,52 @@ public sealed class ActionResolver
         }
     }
 
+    public bool IsActionPresented(RunState run, string actionId, out ActionRow action, out bool canExecute, out ActionRejectReason executeReason)
+    {
+        executeReason = EvaluateSelect(run, actionId, out action);
+        if (executeReason == ActionRejectReason.None)
+        {
+            canExecute = true;
+            return true;
+        }
+
+        if (executeReason == ActionRejectReason.InsufficientTurns)
+        {
+            canExecute = false;
+            return true;
+        }
+
+        canExecute = false;
+        return false;
+    }
+
+    public void CollectPresentedActions(RunState run, List<PresentedAction> destination)
+    {
+        if (destination == null)
+            return;
+
+        destination.Clear();
+        if (database == null || !database.Loaded || database.HasErrors)
+            return;
+
+        var actions = database.EnabledActions;
+        for (int i = 0; i < actions.Count; i++)
+        {
+            ActionRow selected;
+            bool canExecute;
+            ActionRejectReason reason;
+            if (!IsActionPresented(run, actions[i].ActionID, out selected, out canExecute, out reason))
+                continue;
+
+            destination.Add(new PresentedAction
+            {
+                Action = selected,
+                CanExecute = canExecute,
+                ExecuteReason = reason
+            });
+        }
+    }
+
     public bool TryResolve(RunState run, string actionId, out ActionResolveResult result)
     {
         result = new ActionResolveResult
@@ -192,7 +249,7 @@ public sealed class ActionResolver
             && (success || database.GetBool("EVENT_ON_FAILED_ACTION"));
         run.LogSnapshot(success ? "action success" : "action fail");
         if (result.EventCheckDue)
-            Debug.Log(LogPrefix + "이벤트 판정 가능 (M1-7에서 추첨). chance=" + result.EventChance);
+            Debug.Log(LogPrefix + "이벤트 판정 가능. chance=" + result.EventChance);
         return true;
     }
 
@@ -210,6 +267,10 @@ public sealed class ActionResolver
                 break;
             case ActionRejectReason.Ended:
                 Debug.LogError(LogPrefix + "종료된 런은 행동을 실행할 수 없습니다. Status=" + run.Status);
+                break;
+            case ActionRejectReason.EventPending:
+                Debug.LogError(LogPrefix + "이벤트 선택 중에는 행동을 실행할 수 없습니다. pending="
+                    + run.PendingEventID);
                 break;
             case ActionRejectReason.UnknownAction:
                 Debug.LogError(LogPrefix + "ActionID를 찾을 수 없습니다: " + actionId);

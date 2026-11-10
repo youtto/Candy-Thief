@@ -129,6 +129,8 @@ GameObject:
   m_Component:
   - component: {fileID: 628148705}
   - component: {fileID: 628148704}
+  - component: {fileID: 628148706}
+  - component: {fileID: 628148707}
   m_Layer: 0
   m_Name: V02App
   m_TagString: Untagged
@@ -153,6 +155,7 @@ MonoBehaviour:
   titleBackgroundSprite: {fileID: 21300000, guid: 7ab129a2f7168c44ba09fbc5fbdffe93, type: 3}
   lobbyBackgroundSprite: {fileID: 21300000, guid: 3711208991ecb0c44b38b08085c46a53, type: 3}
   playerIdleSprite: {fileID: 21300000, guid: 26590ad7d3d456541a37f1f645202803, type: 3}
+  koreanFont: {fileID: 0}
 --- !u!4 &628148705
 Transform:
   m_ObjectHideFlags: 0
@@ -168,6 +171,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &628148706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 628148703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e01ad55171dea7d42add25803a2beb41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::V02LobbyArtController
+  lobbyBackground: {fileID: 21300000, guid: 5b670a2a164af00449f3a8c3b1e2351a, type: 3}
+  thiefIdle: {fileID: 21300000, guid: d753a56ed2697aa4bb457b6b7a6aa0bc, type: 3}
+  characterScale: 1.5
+--- !u!114 &628148707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 628148703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f84f21500fc4be4bb656bfeb00a803d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::V02LobbyIdleAnimator
+  breathScaleAmount: 0.025
+  breathPeriod: 2.2
+  swayAngle: 0.5
+  swayPeriod: 2.4
 --- !u!1 &1510899443
 GameObject:
   m_ObjectHideFlags: 0

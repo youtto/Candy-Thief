@@ -164,3 +164,16 @@ public sealed class EffectRow
     public bool Enabled;
     public string Notes;
 }
+
+public sealed class ResultFeedbackRow
+{
+    public string FeedbackID;
+    public string SourceType;
+    public string SourceID;
+    public string SuccessText;
+    public string FailText;
+    public string SuccessPresentationID;
+    public string FailPresentationID;
+    public bool Enabled;
+    public string Notes;
+}

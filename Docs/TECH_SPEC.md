@@ -69,10 +69,10 @@ Title / ShopSelect / Result  (uGUI screens)
 
 ### RunState
 
-Fields: `ShopID`, `CurrentPhase`, remaining turns, alert, integer run candy, last action result, `RunStatus` (`InProgress` / `Won` / `Failed`).  
-Start from a `ShopID` via `CsvDatabase` (`StartTurn`, `StartAlert`, candy 0, first `PhaseTable` row by `PhaseOrder`). Unknown shop IDs fail loud. M1 test default shop is `SHOP_001` (D-010), not a production auto-select.
+Fields: `ShopID`, `CurrentPhase`, remaining turns, alert, integer run candy, last action result, `RunStatus` (`InProgress` / `Won` / `Failed`), pending `EventID`, `successfulActionIds`, `successfulEventIds`.  
+Start from a `ShopID` via `CsvDatabase` (`StartTurn`, `StartAlert`, candy 0, first `PhaseTable` row by `PhaseOrder`). Unknown shop IDs fail loud. M1 test default shop is `SHOP_001` (D-010), not a production auto-select. A new run clears event success history and pending.
 
-Mutations use Action/EventOption column values passed in by later resolvers. `RunState` does not roll success chance. Do not route through `EffectTable` until `Implemented=1`. After `Won`/`Failed`, reject further mutation.
+Mutations use Action/EventOption column values passed in by later resolvers. `RunState` does not roll success chance. Do not store `OptionID` as `LastActionID`. Do not route through `EffectTable` until `Implemented=1`. After `Won`/`Failed`, reject further mutation. Pending event blocks action select/apply.
 
 Clamps: turns and candy ≥ 0; alert in `[0, GameConfig.MAX_ALERT]`. Limits come from tables/config, not literals in C#.
 
@@ -94,26 +94,27 @@ Selection: `TurnCost` > remaining turns is rejected with no state change. Equal 
 
 Order: reject if `TurnCost` > remaining → subtract `TurnCost` → success/fail deltas → end check (above) → event if still `InProgress`.
 
-- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). `ActionResolver` computes and rolls this (M1-4). Inject `IChanceRoll` in tests.
-- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). `ActionResolver` reports whether an event check is due; the roll itself is M1-7.
+- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). `ActionResolver` computes and rolls this (M1-4). Inject `IChanceRoll` in tests. Event options use the same formula on `EventOptionTable.SuccessRate` (D-015).
+- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). `ActionResolver` reports whether an event check is due; `EventResolver` rolls trigger chance, filters candidates, and `Weight`-picks (M1-7). Do not draw inside `ActionResolver.TryResolve`.
 - Candy during run: add integer `SuccessCandy` / `FailCandy` (and event-option candy). Do **not** multiply by `CandyMultiplier` per action (D-009).
 - Escape success (later): `finalReward = CeilToInt(runCandy × CandyMultiplier)`. Escape fail: `finalReward = 0`.
 - Required fail: keep the action choosable in the same phase while `InProgress`.
-- Repeatable column: D-013 (post-success reappearance, not attempt count). Re-check when implementing M1-7 event pick; do not treat it as roll chance.
-- Event only if `EventEligible=1` (and fail-path if `EVENT_ON_FAILED_ACTION=1`). Filter tags/phase/alert/turns, then weighted pick. After an option, stop.
+- Repeatable column: D-013 (post-success reappearance, not attempt count). `EventResolver` applies this to `EventID` via `successfulEventIds`, never mixed with ActionIDs.
+- Event only if `EventEligible=1` (and fail-path if `EVENT_ON_FAILED_ACTION=1`). `PhaseFilter` uses the pre-action phase. Alert/turn windows are inclusive and use post-action state. After an option, stop. Pending event blocks further actions. Options are not escape actions.
 
 RNG: `UnityEngine.Random` unless P-006 requires a seed.
 
 ### UI
 
 - v0.2 start scene: `Assets/Scenes/V02/Title.unity` (D-012). Do not reuse `SampleScene` as the production HUD. `SampleScene` stays in the project, not first in Build Settings.
-- Hub screens in that scene: Title, Lobby, Shop Select, plus a temporary run-debug panel after shop pick. In-run `RunUI` is later.
-- New Canvas scene or a dedicated UI object in a new scene (`TEMP` name: `RunUI`).
-- Canvas Scaler: Scale With Screen Size, 1080×1920, match width or height `TBD` (`TEMP` match width 0.5).
-- Safe Area wrapper on the root.
-- One `ChoiceList` widget for required actions, optional actions, and event options.
-- Top bar: turns, alert, candy. Bind to `RunState`.
-- M1: TMP text and default buttons. No final illustration.
+- Hub screens in that scene: Title, Lobby, Shop Select (D-012). After shop pick, instantiate `Resources/V02/UI/RunHud` under the same Canvas SafeArea (M1-8).
+- Canvas Scaler: Scale With Screen Size, 1080×1920, match width or height 0.5.
+- Safe Area wrapper on the hub root. Run HUD stretches inside it.
+- Prefabs: `RunHud.prefab` + `ChoiceButton.prefab`. Layout is Inspector-editable. Choice count Instantiates from CSV.
+- One `ChoiceList` for required actions, optional actions, and event options. `IsActionPresented` / `IsOptionPresented` separate hide vs `InsufficientTurns` disable. Execute still uses `EvaluateSelect` / `EvaluateSelectOption`.
+- Top bar: turns, alert, candy. Center: phase or event copy, placeholder illustration via `ImageKey`. Bind to `RunState` + resolvers.
+- Result feedback (M1-8.5): overlay modal with reaction sprite, wrapping body, snapshot deltas, `[계속]`. Presentation IDs live in `ResultFeedbackTable`; sprites are Inspector/`Resources/V02/Feedback` mapped. Rebuild menu asks before overwriting prefabs; use Patch to keep Inspector slots.
+- M1: TMP text and default buttons. Event PNG files are not shipped; placeholder remains. Result screen is M1-9.
 
 ## Save (M4)
 

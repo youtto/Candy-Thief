@@ -1,0 +1,24 @@
+﻿FeedbackID,SourceType,SourceID,SuccessText,FailText,SuccessPresentationID,FailPresentationID,Enabled,Notes
+FB_ACT_001,ACTION,ACT_001,골목 그늘로 슬쩍 빠져나왔다. 아무도 안 봤다. 아마.,골목 끝에서 누군가와 눈이 마주쳤다. 아주 오래.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,MOVE 골목길
+FB_ACT_002,ACTION,ACT_002,페달이 삐걱였지만 어떻게든 도착했다.,벨이 울렸다. 내가 안 눌렀는데.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,MOVE 자전거
+FB_ACT_003,ACTION,ACT_003,뛰었다. 살았다. 숨은 아직 안 돌아왔다.,너무 빨라서 내가 나를 의심했다. 경비도 그랬다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,MOVE 지름길
+FB_ACT_004,ACTION,ACT_004,딸깍. 문이 열렸다. 생각보다 허술했다.,핀이 부러졌다. 문은 그대로다. 손만 아프다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,INFILTRATE 자물쇠
+FB_ACT_005,ACTION,ACT_005,뒷문은 열려 있었다. 자랑할 일은 아니다.,뒷문인 줄 알았는데 경비 휴게실이었다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,INFILTRATE 뒷문
+FB_ACT_006,ACTION,ACT_006,먼지투성이로 기어 나왔다. 안에는 들어와 있다.,끼었다. 잠깐. 많이.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,INFILTRATE 환풍구
+FB_ACT_007,ACTION,ACT_007,진열대 사탕을 주머니에 쓸어 담았다. 양심은 나중에.,포장지가 바스락였다. 발소리가 멈췄다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,LOOT 진열대
+FB_ACT_008,ACTION,ACT_008,상자 안에 사탕이 가득했다. 양손은 부족하다.,상자 대신 빗자루가 쓰러졌다. 크게.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,LOOT 창고
+FB_ACT_009,ACTION,ACT_009,금고가 열렸다. 심장이 더 크게 열렸다.,비밀번호를 틀렸다. 금고가 나를 비웃는 것 같다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,LOOT 금고
+FB_ACT_010,ACTION,ACT_010,정문으로 나왔다. 평범해서 더 안 들켰다.,인사할 뻔했다. 경비와.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,ESCAPE 정문
+FB_ACT_011,ACTION,ACT_011,담장을 넘었다. 바지가 조금 남았다.,담장 위에서 멈췄다. 내려오는 법을 잊었다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,ESCAPE 담장
+FB_ACT_012,ACTION,ACT_012,하수구로 미끄러졌다. 사탕만은 지켰다.,뚜껑이 안 열렸다. 발만 미끄러졌다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,ESCAPE 하수구
+FB_ACT_013,ACTION,ACT_013,이쯤이면 됐다. 가방을 닫았다.,가방 지퍼가 안 닫힌다. 지금?,PRES_SUCCESS_DEFAULT,PRES_FAIL_DEFAULT,1,LOOT 탈출 준비
+FB_OPT_001,OPTION,OPT_001,발소리를 죽였다. 코골이는 여전하다.,바닥이 삐걱였다. 경비가 뒤척였다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_DEFAULT,1,EVT_001 지나간다
+FB_OPT_002,OPTION,OPT_002,주머니에서 사탕이 만져졌다. 양심은 접었다.,바스락. 경비가 눈을 떴다. 아주 살짝.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_001 주머니
+FB_OPT_003,OPTION,OPT_003,상자 안에 사탕이 있었다. 함정은 다음 상자에서.,상자를 열자 요란한 소리가 났다. 내 심장 소리보다 컸다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_002 상자
+FB_OPT_004,OPTION,OPT_004,상자를 지나쳤다. 미련은 남겼다.,상자를 안 열었는데 발이 걸렸다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_DEFAULT,1,EVT_002 무시
+FB_OPT_005,OPTION,OPT_005,상자 뒤에 숨었다. 먼지를 먹었다.,숨는 자리가 너무 작았다. 발이 남았다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_003 숨기
+FB_OPT_006,OPTION,OPT_006,아무 일도 없는 척 걸었다. 통했다.,손전등이 등을 훑었다. 식은땀이 먼저 달렸다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_003 통과
+FB_OPT_007,OPTION,OPT_007,비밀 문이 열렸다. 시간을 조금 돌려받았다.,문은 장식이었다. 시간만 갔다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_004 지름길
+FB_OPT_008,OPTION,OPT_008,아는 길로 갔다. 모험은 다음에.,아는 길에서 넘어졌다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_DEFAULT,1,EVT_004 본래 길
+FB_OPT_009,OPTION,OPT_009,황금 사탕이었다. 진짜인지는 나중에.,반짝이던 건 유리조각이었다. 소리가 났다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_ALERT,1,EVT_005 줍기
+FB_OPT_010,OPTION,OPT_010,주우지 않았다. 어른이 된 기분이다.,안 주웠는데 발이 그걸 찼다.,PRES_SUCCESS_DEFAULT,PRES_FAIL_DEFAULT,1,EVT_005 지나침

@@ -160,7 +160,7 @@ public static class V02Ui
         text.alignment = align;
         text.raycastTarget = false;
         text.textWrappingMode = TextWrappingModes.Normal;
-        text.overflowMode = TextOverflowModes.Ellipsis;
+        text.overflowMode = TextOverflowModes.Overflow;
         return text;
     }
 
