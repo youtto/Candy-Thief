@@ -185,6 +185,34 @@ public static class V02Ui
         image.raycastTarget = raycastTarget;
     }
 
+    public static Button CreateImageButton(
+        string name,
+        Transform parent,
+        Sprite sprite,
+        UnityAction onClick)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        RectTransform rect = (RectTransform)go.transform;
+        rect.anchorMin = new Vector2(0.5f, 0.5f);
+        rect.anchorMax = new Vector2(0.5f, 0.5f);
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.sizeDelta = sprite != null ? sprite.rect.size : new Vector2(100f, 100f);
+        Image image = go.AddComponent<Image>();
+        ApplySprite(image, sprite, true, true);
+        if (sprite != null && sprite.texture != null && sprite.texture.isReadable)
+            image.alphaHitTestMinimumThreshold = 0.1f;
+
+        Button button = rect.gameObject.AddComponent<Button>();
+        button.targetGraphic = image;
+        button.transition = Selectable.Transition.None;
+        if (onClick != null)
+            button.onClick.AddListener(onClick);
+
+        rect.gameObject.AddComponent<V02UiPressScale>();
+        return button;
+    }
+
     public static Button CreateButton(
         string name,
         Transform parent,

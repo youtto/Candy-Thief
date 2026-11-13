@@ -9,72 +9,89 @@ using UnityEngine.UI;
 
 public class V02AppFlow : MonoBehaviour
 {
-    const string TitleSpritePath = "Assets/Art/Title/CT_Title_A_v001.png";
     const string LobbySpritePath = "Assets/Art/Lobby/CT_Lobby_B_Background_v001.png";
     const string PlayerSpritePath = "Assets/Art/Lobby/CT_Player_Idle_v001.png";
+    const string HudSheetPath = "Assets/Art/Lobby/CT_Lobby_HUD_Sheet_v001.png";
+    const string HudAvatarPath = "Assets/Art/Lobby/Review/CT_Lobby_Thief_Idle_v007_display230.png";
+    const string BtnCrewPath = "Assets/Art/Lobby/CT_Lobby_Btn_Crew_v003.png";
+    const string BtnStartPath = "Assets/Art/Lobby/CT_Lobby_Btn_Start_v003.png";
+    const string BtnEnhancePath = "Assets/Art/Lobby/CT_Lobby_Btn_Enhance_v002.png";
+    static readonly Color HudValueColor = new Color(1f, 0.96f, 0.86f);
 
-    [SerializeField] float titleMinSeconds = 1f;
     [SerializeField] float fadeSeconds = 0.3f;
-    [SerializeField] Sprite titleBackgroundSprite;
     [SerializeField] Sprite lobbyBackgroundSprite;
     [SerializeField] Sprite playerIdleSprite;
+    [SerializeField] Sprite hudAvatarPortrait;
+    [SerializeField] Sprite hudAvatarFrame;
+    [SerializeField] Sprite hudNicknamePlate;
+    [SerializeField] Sprite hudEnergyIcon;
+    [SerializeField] Sprite hudEnergyChip;
+    [SerializeField] Sprite hudGoldIcon;
+    [SerializeField] Sprite hudGoldChip;
+    [SerializeField] Sprite hudCandyIcon;
+    [SerializeField] Sprite hudCandyChip;
+    [SerializeField] Sprite hudSettings;
+    [SerializeField] Sprite btnCrew;
+    [SerializeField] Sprite btnStart;
+    [SerializeField] Sprite btnEnhance;
     [SerializeField] TMP_FontAsset koreanFont;
-
-    RectTransform titleScreen;
-    RectTransform lobbyScreen;
+    [SerializeField] RectTransform titleCanvas;
+    [SerializeField] RectTransform safeArea;
+    [SerializeField] RectTransform titleScreen;
+    [SerializeField] RectTransform lobbyScreen;
+    [SerializeField] V02TitleLogin titleLogin;
+    [SerializeField] V02LobbyHud lobbyHud;
+    [SerializeField] TextMeshProUGUI titleStatus;
     RectTransform shopScreen;
     RectTransform debugScreen;
     RectTransform runHudScreen;
     RectTransform comingSoon;
     RectTransform currentScreen;
     TextMeshProUGUI comingSoonText;
-    TextMeshProUGUI titleStatus;
     TextMeshProUGUI debugBody;
     Transform shopList;
-    RectTransform safeArea;
     V02RunHud runHud;
+    V02LocalProfileService profiles;
+    Coroutine lobbyFade;
 
     void Awake()
     {
         EnsureEventSystem();
         EnsureCamera();
+        profiles = V02LocalProfileService.CreateDefault();
         ResolveArt();
         V02Ui.UseFont(koreanFont);
         BuildUi();
-        Show(titleScreen);
+        if (titleScreen != null)
+            Show(titleScreen);
+        else
+        {
+            BindLobbyPreview();
+            Show(lobbyScreen);
+        }
     }
 
-    IEnumerator Start()
+    void Start()
     {
-        float elapsed = 0f;
-        bool ready = false;
-        while (elapsed < titleMinSeconds || !ready)
+        if (titleLogin != null)
         {
-            elapsed += Time.unscaledDeltaTime;
-            CsvDatabase database = CsvDatabase.Current;
-            if (database == null || !database.Loaded)
-            {
-                database = CsvDatabase.LoadFromResources();
-                SetTitleStatus("로비 준비 중…");
-            }
-
-            if (database != null && database.Loaded && !database.HasErrors)
-            {
-                ready = true;
-                SetTitleStatus("입장 중…");
-            }
-            else if (database != null && database.HasErrors)
-            {
-                SetTitleStatus("데이터 로딩 실패. CSV를 확인하세요.");
-                Debug.LogError("[V02] CSV 로딩 실패. 타이틀에 머무릅니다.");
-                yield break;
-            }
-
-            if (elapsed < titleMinSeconds || !ready)
-                yield return null;
+            titleLogin.LoggedIn -= OnTitleLoggedIn;
+            titleLogin.LoggedIn += OnTitleLoggedIn;
+            titleLogin.Bind(profiles ?? V02LocalProfileService.CreateDefault());
         }
 
-        yield return FadeTo(lobbyScreen);
+        CsvDatabase database = CsvDatabase.Current;
+        if (database == null || !database.Loaded)
+            database = CsvDatabase.LoadFromResources();
+
+        if (database != null && database.HasErrors)
+        {
+            if (titleLogin != null)
+                titleLogin.SetCsvBlocked(true, "데이터 로딩 실패. CSV를 확인하세요.");
+            else
+                SetTitleStatus("데이터 로딩 실패. CSV를 확인하세요.");
+            Debug.LogError("[V02] CSV 로딩 실패. 타이틀에 머무릅니다.");
+        }
     }
 
     void EnsureCamera()
@@ -104,45 +121,172 @@ public class V02AppFlow : MonoBehaviour
 
     void BuildUi()
     {
-        if (transform.Find("Canvas") != null)
+        BindTitleFromScene();
+        BindLobbyFromScene();
+        EnsureRuntimeHubScreens();
+        if (titleLogin != null)
+        {
+            titleLogin.LoggedIn -= OnTitleLoggedIn;
+            titleLogin.LoggedIn += OnTitleLoggedIn;
+            titleLogin.Bind(profiles);
+        }
+    }
+
+    void BindTitleFromScene()
+    {
+        if (titleCanvas == null)
+        {
+            Transform found = transform.Find("TitleCanvas");
+            if (found == null)
+            {
+                var sceneCanvas = GameObject.Find("TitleCanvas");
+                found = sceneCanvas != null ? sceneCanvas.transform : null;
+            }
+
+            if (found != null)
+                titleCanvas = found as RectTransform;
+        }
+
+        if (safeArea == null && titleCanvas != null)
+        {
+            Transform found = titleCanvas.Find("SafeArea");
+            if (found != null)
+                safeArea = found as RectTransform;
+        }
+
+        if (titleScreen == null && safeArea != null)
+        {
+            Transform found = safeArea.Find("Title");
+            if (found != null)
+                titleScreen = found as RectTransform;
+        }
+
+        if (titleLogin == null && titleScreen != null)
+            titleLogin = titleScreen.GetComponentInChildren<V02TitleLogin>(true);
+
+        if (titleStatus == null && titleScreen != null)
+        {
+            Transform found = titleScreen.Find("LoginPanel/ErrorMessage");
+            if (found == null)
+                found = titleScreen.Find("ErrorMessage");
+            if (found != null)
+                titleStatus = found.GetComponent<TextMeshProUGUI>();
+        }
+
+        if (titleScreen == null && lobbyScreen == null)
+            Debug.LogError("[V02] Title 또는 Lobby UI가 씬에 없습니다. TitleCanvas/SafeArea 아래에 배치하세요.");
+    }
+
+    void BindLobbyFromScene()
+    {
+        if (lobbyScreen == null && safeArea != null)
+        {
+            Transform found = safeArea.Find("Lobby");
+            if (found != null)
+                lobbyScreen = found as RectTransform;
+        }
+
+        if (lobbyScreen == null)
+        {
+            Debug.LogError("[V02] Lobby UI가 씬에 없습니다. TitleCanvas/SafeArea/Lobby 를 배치하세요.");
+            return;
+        }
+
+        V02Ui.AddCanvasGroup(lobbyScreen);
+        if (lobbyHud == null)
+            lobbyHud = lobbyScreen.GetComponent<V02LobbyHud>();
+        if (lobbyHud == null)
+            lobbyHud = lobbyScreen.GetComponentInChildren<V02LobbyHud>(true);
+
+        WireLobbyButton("BottomActions/BtnCrew", OnLobbyCrewClicked);
+        WireLobbyButton("BottomActions/BtnStart", OnLobbyStartClicked);
+        WireLobbyButton("BottomActions/BtnEnhance", OnLobbyEnhanceClicked);
+        WireLobbyButton("TopHud/Currencies/Settings", OnLobbySettingsClicked);
+    }
+
+    void WireLobbyButton(string path, UnityEngine.Events.UnityAction onClick)
+    {
+        if (lobbyScreen == null)
             return;
 
-        var canvasGo = new GameObject("Canvas", typeof(RectTransform));
-        canvasGo.transform.SetParent(transform, false);
-        Canvas canvas = canvasGo.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.pixelPerfect = false;
-        CanvasScaler scaler = canvasGo.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(V02Ui.RefWidth, V02Ui.RefHeight);
-        scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
-        scaler.matchWidthOrHeight = 0.5f;
-        canvasGo.AddComponent<GraphicRaycaster>();
+        Transform found = lobbyScreen.Find(path);
+        if (found == null)
+            return;
 
-        RectTransform safe = V02Ui.CreateStretch("SafeArea", canvasGo.transform);
-        safe.gameObject.AddComponent<SafeAreaFitter>();
-        safeArea = safe;
+        Button button = found.GetComponent<Button>();
+        if (button == null)
+            return;
 
-        titleScreen = BuildTitle(safe);
-        lobbyScreen = BuildLobby(safe);
-        shopScreen = BuildShopSelect(safe);
-        debugScreen = BuildDebug(safe);
-        comingSoon = BuildComingSoon(safe);
-        comingSoon.gameObject.SetActive(false);
+        button.onClick.RemoveListener(onClick);
+        button.onClick.AddListener(onClick);
     }
 
-    RectTransform BuildTitle(Transform parent)
+    public void OnLobbyCrewClicked()
     {
-        RectTransform root = V02Ui.CreatePanel("Title", parent, new Color(0.50f, 0.80f, 0.94f));
-        Image bg = root.GetComponent<Image>();
-        V02Ui.ApplySprite(bg, titleBackgroundSprite, true, false);
-        V02Ui.AddCanvasGroup(root);
-
-        titleStatus = V02Ui.CreateText(
-            "Status", root, "로딩 중…", 28f, V02Ui.Ink, TextAlignmentOptions.Center);
-        V02Ui.SetAnchors(titleStatus.rectTransform, new Vector2(0.1f, 0.04f), new Vector2(0.9f, 0.12f), Vector2.zero, Vector2.zero);
-        return root;
+        ShowComingSoon("크루");
     }
+
+    public void OnLobbyStartClicked()
+    {
+        ShowShopSelect();
+    }
+
+    public void OnLobbyEnhanceClicked()
+    {
+        ShowComingSoon("강화");
+    }
+
+    public void OnLobbySettingsClicked()
+    {
+        ShowComingSoon("설정");
+    }
+
+    void BindLobbyPreview()
+    {
+        if (lobbyHud == null || profiles == null)
+            return;
+
+        string nickname;
+        string error;
+        V02PlayerProfile peeked;
+        if (profiles.TryReadLastNickname(out nickname, out error)
+            && !string.IsNullOrEmpty(nickname)
+            && profiles.TryPeek(nickname, out peeked, out error))
+        {
+            lobbyHud.BindDisplayOnly(peeked);
+            return;
+        }
+
+        lobbyHud.BindDisplayOnly(null);
+    }
+
+    void EnsureRuntimeHubScreens()
+    {
+        if (safeArea == null)
+            return;
+
+        shopScreen = FindOrBuild("ShopSelect", BuildShopSelect);
+        debugScreen = FindOrBuild("RunDebug", BuildDebug);
+        comingSoon = FindOrBuild("ComingSoon", BuildComingSoon);
+        if (comingSoon != null)
+            comingSoon.gameObject.SetActive(false);
+    }
+
+    RectTransform FindOrBuild(string childName, System.Func<Transform, RectTransform> build)
+    {
+        Transform existing = safeArea.Find(childName);
+        if (existing != null)
+            return existing as RectTransform;
+        return build(safeArea);
+    }
+
+#if UNITY_EDITOR
+    public RectTransform EditorBuildLobby(Transform parent)
+    {
+        ResolveArt();
+        return BuildLobby(parent);
+    }
+#endif
 
     RectTransform BuildLobby(Transform parent)
     {
@@ -151,57 +295,124 @@ public class V02AppFlow : MonoBehaviour
         V02Ui.ApplySprite(bg, lobbyBackgroundSprite, true, false);
         V02Ui.AddCanvasGroup(root);
 
-        RectTransform top = V02Ui.CreatePanel("TopBar", root, V02Ui.White);
-        V02Ui.SetAnchors(top, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(24f, -160f), new Vector2(-24f, -24f));
-
-        Button profile = V02Ui.CreateButton("Profile", top, "도둑", V02Ui.Pink, () => ShowComingSoon("프로필"));
-        V02Ui.SetAnchors((RectTransform)profile.transform, new Vector2(0f, 0.1f), new Vector2(0.28f, 0.9f), Vector2.zero, Vector2.zero);
-
-        Button energy = V02Ui.CreateButton("Energy", top, "에너지  —", V02Ui.Yellow, () => ShowComingSoon("에너지"));
-        V02Ui.SetAnchors((RectTransform)energy.transform, new Vector2(0.30f, 0.1f), new Vector2(0.48f, 0.9f), Vector2.zero, Vector2.zero);
-
-        Button gold = V02Ui.CreateButton("Gold", top, "골드  —", V02Ui.Yellow, () => ShowComingSoon("골드"));
-        V02Ui.SetAnchors((RectTransform)gold.transform, new Vector2(0.50f, 0.1f), new Vector2(0.68f, 0.9f), Vector2.zero, Vector2.zero);
-
-        Button goldCandy = V02Ui.CreateButton("GoldCandy", top, "골드사탕  —", V02Ui.Yellow, () => ShowComingSoon("골드 사탕"));
-        V02Ui.SetAnchors((RectTransform)goldCandy.transform, new Vector2(0.70f, 0.1f), new Vector2(0.86f, 0.9f), Vector2.zero, Vector2.zero);
-
-        Button settings = V02Ui.CreateButton("Settings", top, "설정", V02Ui.Purple, () => ShowComingSoon("설정"));
-        V02Ui.SetAnchors((RectTransform)settings.transform, new Vector2(0.88f, 0.1f), new Vector2(1f, 0.9f), Vector2.zero, Vector2.zero);
-
-        if (playerIdleSprite != null)
+        if (playerIdleSprite != null || hudAvatarPortrait != null)
         {
             RectTransform player = V02Ui.CreateStretch("Player", root);
             Image playerImage = player.gameObject.AddComponent<Image>();
-            V02Ui.ApplySprite(playerImage, playerIdleSprite, true, false);
+            V02Ui.ApplySprite(playerImage, playerIdleSprite != null ? playerIdleSprite : hudAvatarPortrait, true, false);
             V02Ui.SetAnchors(player, new Vector2(0.5f, 0.33f), new Vector2(0.5f, 0.33f), new Vector2(-170f, 0f), new Vector2(170f, 300f));
             player.gameObject.AddComponent<V02IdleBob>();
         }
 
-        Button slotA = V02Ui.CreateButton("AllySlotA", root, "+", V02Ui.White, () => ShowComingSoon("조력자"));
-        V02Ui.SetAnchors((RectTransform)slotA.transform, new Vector2(0.16f, 0.46f), new Vector2(0.16f, 0.46f), new Vector2(0f, 0f), new Vector2(120f, 120f));
-
-        Button slotB = V02Ui.CreateButton("AllySlotB", root, "+", V02Ui.White, () => ShowComingSoon("조력자"));
-        V02Ui.SetAnchors((RectTransform)slotB.transform, new Vector2(0.84f, 0.46f), new Vector2(0.84f, 0.46f), new Vector2(-120f, 0f), new Vector2(0f, 120f));
-
-        Button start = V02Ui.CreateButton("StartHeist", root, "도둑질 시작!", V02Ui.Pink, ShowShopSelect);
-        V02Ui.SetAnchors((RectTransform)start.transform, new Vector2(0.1f, 0.16f), new Vector2(0.9f, 0.26f), Vector2.zero, Vector2.zero);
-        start.GetComponentInChildren<TextMeshProUGUI>().fontSize = 48f;
-
-        RectTransform bottom = V02Ui.CreatePanel("BottomBar", root, V02Ui.White);
-        V02Ui.SetAnchors(bottom, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(16f, 16f), new Vector2(-16f, 150f));
-
-        string[] menus = { "캐릭터", "뽑기", "도감", "상점", "미션" };
-        for (int i = 0; i < menus.Length; i++)
-        {
-            string menuName = menus[i];
-            Button item = V02Ui.CreateButton("Menu" + i, bottom, menuName, V02Ui.Mint, () => ShowComingSoon(menuName));
-            float min = i / 5f;
-            float max = (i + 1) / 5f;
-            V02Ui.SetAnchors((RectTransform)item.transform, new Vector2(min, 0.08f), new Vector2(max, 0.92f), new Vector2(8f, 0f), new Vector2(-8f, 0f));
-        }
-
+        BuildLobbyHudAndButtons(root);
         return root;
+    }
+
+    void EnsureLobbyChrome(RectTransform lobby)
+    {
+        if (lobby == null)
+            return;
+
+        StripLegacyLobbyWidget(lobby, "TopBar");
+        StripLegacyLobbyWidget(lobby, "BottomBar");
+        StripLegacyLobbyWidget(lobby, "AllySlotA");
+        StripLegacyLobbyWidget(lobby, "AllySlotB");
+        StripLegacyLobbyWidget(lobby, "StartHeist");
+
+        if (lobby.Find("TopHud") == null || lobby.Find("BottomActions") == null)
+            BuildLobbyHudAndButtons(lobby);
+
+        lobbyHud = lobby.GetComponent<V02LobbyHud>();
+        if (lobbyHud == null)
+            lobbyHud = lobby.gameObject.AddComponent<V02LobbyHud>();
+    }
+
+    static void StripLegacyLobbyWidget(Transform lobby, string childName)
+    {
+        Transform child = lobby.Find(childName);
+        if (child == null)
+            return;
+        Object.DestroyImmediate(child.gameObject);
+    }
+
+    void BuildLobbyHudAndButtons(RectTransform root)
+    {
+        Transform existingHud = root.Find("TopHud");
+        if (existingHud != null)
+            Object.DestroyImmediate(existingHud.gameObject);
+        Transform existingButtons = root.Find("BottomActions");
+        if (existingButtons != null)
+            Object.DestroyImmediate(existingButtons.gameObject);
+
+        RectTransform hud = V02Ui.CreateStretch("TopHud", root);
+        V02Ui.SetAnchors(hud, new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(20f, -128f), new Vector2(-20f, -16f));
+
+        RectTransform profile = CreateHudCluster("Profile", hud, false);
+        RectTransform avatarRoot = CreateHudSized("AvatarRoot", profile, new Vector2(80f, 80f));
+        Image avatar = CreateHudImage("Avatar", avatarRoot, hudAvatarPortrait != null ? hudAvatarPortrait : playerIdleSprite, false);
+        V02Ui.SetAnchors((RectTransform)avatar.transform, new Vector2(0.12f, 0.12f), new Vector2(0.88f, 0.88f), Vector2.zero, Vector2.zero);
+        Image frame = CreateHudImage("Frame", avatarRoot, hudAvatarFrame, false);
+        V02Ui.Stretch((RectTransform)frame.transform);
+
+        Image nicknamePlate = CreateHudImage("NicknamePlate", profile, hudNicknamePlate, false);
+        LayoutElement nicknameLayout = nicknamePlate.gameObject.AddComponent<LayoutElement>();
+        nicknameLayout.preferredWidth = 208f;
+        nicknameLayout.preferredHeight = 52f;
+        nicknameLayout.minWidth = 208f;
+        nicknameLayout.minHeight = 52f;
+        TextMeshProUGUI nicknameText = CreateHudValue(
+            "NicknameText", nicknamePlate.transform, "", 28f, TextAlignmentOptions.Midline);
+        V02Ui.SetAnchors(nicknameText.rectTransform, Vector2.zero, Vector2.one, new Vector2(18f, 6f), new Vector2(-18f, -6f));
+        nicknameText.enableAutoSizing = true;
+        nicknameText.fontSizeMin = 18f;
+        nicknameText.fontSizeMax = 28f;
+        nicknameText.overflowMode = TextOverflowModes.Ellipsis;
+        nicknameText.textWrappingMode = TextWrappingModes.NoWrap;
+
+        RectTransform currencies = CreateHudCluster("Currencies", hud, true);
+        CreateHudImage("EnergyIcon", currencies, hudEnergyIcon, false);
+        FitHudSprite(currencies.Find("EnergyIcon"), 46f, 46f);
+        Image energyChip = CreateHudImage("EnergyChip", currencies, hudEnergyChip, false);
+        FitHudSprite(energyChip.transform, 100f, 48f);
+        TextMeshProUGUI energyText = CreateHudValue(
+            "EnergyText", energyChip.transform, "10/20", 24f, TextAlignmentOptions.Center);
+        V02Ui.SetAnchors(energyText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8f, 4f), new Vector2(-8f, -4f));
+
+        CreateHudImage("GoldIcon", currencies, hudGoldIcon, false);
+        FitHudSprite(currencies.Find("GoldIcon"), 50f, 50f);
+        Image goldChip = CreateHudImage("GoldChip", currencies, hudGoldChip, false);
+        FitHudSprite(goldChip.transform, 100f, 48f);
+        TextMeshProUGUI goldText = CreateHudValue(
+            "GoldText", goldChip.transform, "0", 24f, TextAlignmentOptions.Center);
+        V02Ui.SetAnchors(goldText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8f, 4f), new Vector2(-8f, -4f));
+
+        CreateHudImage("CandyIcon", currencies, hudCandyIcon, false);
+        FitHudSprite(currencies.Find("CandyIcon"), 54f, 50f);
+        Image candyChip = CreateHudImage("CandyChip", currencies, hudCandyChip, false);
+        FitHudSprite(candyChip.transform, 100f, 48f);
+        TextMeshProUGUI candyText = CreateHudValue(
+            "CandyText", candyChip.transform, "0", 24f, TextAlignmentOptions.Center);
+        V02Ui.SetAnchors(candyText.rectTransform, Vector2.zero, Vector2.one, new Vector2(8f, 4f), new Vector2(-8f, -4f));
+
+        Button settings = V02Ui.CreateImageButton("Settings", currencies, hudSettings, () => ShowComingSoon("설정"));
+        FitHudSprite(settings.transform, 52f, 52f);
+
+        RectTransform bottom = V02Ui.CreateStretch("BottomActions", root);
+        V02Ui.SetAnchors(bottom, new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 0f), new Vector2(0f, 300f));
+
+        Button crew = V02Ui.CreateImageButton("BtnCrew", bottom, btnCrew, () => ShowComingSoon("크루"));
+        PlaceBottomButton((RectTransform)crew.transform, new Vector2(-312f, 8f), new Vector2(256f, 241f));
+
+        Button start = V02Ui.CreateImageButton("BtnStart", bottom, btnStart, ShowShopSelect);
+        PlaceBottomButton((RectTransform)start.transform, new Vector2(0f, 22f), new Vector2(320f, 240f));
+
+        Button enhance = V02Ui.CreateImageButton("BtnEnhance", bottom, btnEnhance, () => ShowComingSoon("강화"));
+        PlaceBottomButton((RectTransform)enhance.transform, new Vector2(312f, 8f), new Vector2(256f, 241f));
+
+        lobbyHud = root.GetComponent<V02LobbyHud>();
+        if (lobbyHud == null)
+            lobbyHud = root.gameObject.AddComponent<V02LobbyHud>();
+        lobbyHud.Configure(nicknameText, energyText, goldText, candyText);
     }
 
     RectTransform BuildShopSelect(Transform parent)
@@ -282,6 +493,8 @@ public class V02AppFlow : MonoBehaviour
     void ShowLobby()
     {
         HideComingSoon();
+        if (lobbyHud != null)
+            lobbyHud.Bind(profiles);
         Show(lobbyScreen);
     }
 
@@ -415,13 +628,160 @@ public class V02AppFlow : MonoBehaviour
             titleStatus.text = message;
     }
 
+    void OnTitleLoggedIn(V02PlayerProfile profile)
+    {
+        if (profile == null || lobbyFade != null)
+            return;
+
+        lobbyFade = StartCoroutine(EnterLobbyAfterLogin());
+    }
+
+    IEnumerator EnterLobbyAfterLogin()
+    {
+        if (lobbyHud != null)
+            lobbyHud.Bind(profiles);
+        yield return FadeTo(lobbyScreen);
+        lobbyFade = null;
+    }
+
     void ResolveArt()
     {
-        titleBackgroundSprite = ResolveSprite(titleBackgroundSprite, TitleSpritePath);
         lobbyBackgroundSprite = ResolveSprite(lobbyBackgroundSprite, LobbySpritePath);
         playerIdleSprite = ResolveSprite(playerIdleSprite, PlayerSpritePath);
+        hudAvatarPortrait = ResolveSprite(hudAvatarPortrait, HudAvatarPath);
+        btnCrew = ResolveSprite(btnCrew, BtnCrewPath);
+        btnStart = ResolveSprite(btnStart, BtnStartPath);
+        btnEnhance = ResolveSprite(btnEnhance, BtnEnhancePath);
+        hudAvatarFrame = ResolveNamedSprite(hudAvatarFrame, HudSheetPath, "HUD_AvatarFrame");
+        hudNicknamePlate = ResolveNamedSprite(hudNicknamePlate, HudSheetPath, "HUD_NicknamePlate");
+        hudEnergyIcon = ResolveNamedSprite(hudEnergyIcon, HudSheetPath, "HUD_EnergyIcon");
+        hudEnergyChip = ResolveNamedSprite(hudEnergyChip, HudSheetPath, "HUD_EnergyChip");
+        hudGoldIcon = ResolveNamedSprite(hudGoldIcon, HudSheetPath, "HUD_GoldIcon");
+        hudGoldChip = ResolveNamedSprite(hudGoldChip, HudSheetPath, "HUD_GoldChip");
+        hudCandyIcon = ResolveNamedSprite(hudCandyIcon, HudSheetPath, "HUD_CandyIcon");
+        hudCandyChip = ResolveNamedSprite(hudCandyChip, HudSheetPath, "HUD_CandyChip");
+        hudSettings = ResolveNamedSprite(hudSettings, HudSheetPath, "HUD_Settings");
         if (koreanFont == null)
             koreanFont = V02Ui.Font();
+    }
+
+    static Sprite ResolveNamedSprite(Sprite assigned, string assetPath, string spriteName)
+    {
+        if (assigned != null)
+            return assigned;
+        return LoadNamedSprite(assetPath, spriteName);
+    }
+
+    static Sprite LoadNamedSprite(string assetPath, string spriteName)
+    {
+#if UNITY_EDITOR
+        Object[] assets = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(assetPath);
+        if (assets == null)
+        {
+            Debug.LogError("[V02] 스프라이트 시트를 찾지 못했습니다: " + assetPath);
+            return null;
+        }
+
+        for (int i = 0; i < assets.Length; i++)
+        {
+            Sprite sprite = assets[i] as Sprite;
+            if (sprite != null && sprite.name == spriteName)
+                return sprite;
+        }
+
+        Debug.LogError("[V02] 스프라이트를 찾지 못했습니다: " + assetPath + " / " + spriteName);
+        return null;
+#else
+        Debug.LogError("[V02] 스프라이트가 할당되지 않았습니다: " + spriteName);
+        return null;
+#endif
+    }
+
+    static RectTransform CreateHudCluster(string name, Transform parent, bool fromRight)
+    {
+        RectTransform rect = V02Ui.CreateStretch(name, parent);
+        rect.anchorMin = fromRight ? new Vector2(1f, 0.5f) : new Vector2(0f, 0.5f);
+        rect.anchorMax = rect.anchorMin;
+        rect.pivot = fromRight ? new Vector2(1f, 0.5f) : new Vector2(0f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(10f, 96f);
+
+        HorizontalLayoutGroup layout = rect.gameObject.AddComponent<HorizontalLayoutGroup>();
+        layout.spacing = fromRight ? 10f : 8f;
+        layout.childAlignment = fromRight ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+        layout.padding = new RectOffset(0, 0, 0, 0);
+
+        ContentSizeFitter fitter = rect.gameObject.AddComponent<ContentSizeFitter>();
+        fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        return rect;
+    }
+
+    static RectTransform CreateHudSized(string name, Transform parent, Vector2 size)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        RectTransform rect = (RectTransform)go.transform;
+        rect.sizeDelta = size;
+        LayoutElement layout = go.AddComponent<LayoutElement>();
+        layout.preferredWidth = size.x;
+        layout.preferredHeight = size.y;
+        layout.minWidth = size.x;
+        layout.minHeight = size.y;
+        return rect;
+    }
+
+    static Image CreateHudImage(string name, Transform parent, Sprite sprite, bool raycast)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(parent, false);
+        Image image = go.AddComponent<Image>();
+        V02Ui.ApplySprite(image, sprite, true, raycast);
+        return image;
+    }
+
+    static void FitHudSprite(Transform target, float width, float height)
+    {
+        if (target == null)
+            return;
+
+        RectTransform rect = target as RectTransform;
+        if (rect != null)
+            rect.sizeDelta = new Vector2(width, height);
+
+        LayoutElement layout = target.gameObject.GetComponent<LayoutElement>();
+        if (layout == null)
+            layout = target.gameObject.AddComponent<LayoutElement>();
+        layout.preferredWidth = width;
+        layout.preferredHeight = height;
+        layout.minWidth = width;
+        layout.minHeight = height;
+    }
+
+    static TextMeshProUGUI CreateHudValue(
+        string name,
+        Transform parent,
+        string content,
+        float size,
+        TextAlignmentOptions align)
+    {
+        TextMeshProUGUI text = V02Ui.CreateText(name, parent, content, size, HudValueColor, align);
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Overflow;
+        return text;
+    }
+
+    static void PlaceBottomButton(RectTransform rect, Vector2 anchored, Vector2 size)
+    {
+        rect.anchorMin = new Vector2(0.5f, 0f);
+        rect.anchorMax = new Vector2(0.5f, 0f);
+        rect.pivot = new Vector2(0.5f, 0f);
+        rect.anchoredPosition = anchored;
+        rect.sizeDelta = size;
     }
 
     static Sprite ResolveSprite(Sprite assigned, string assetPath)
@@ -481,6 +841,12 @@ public class V02AppFlow : MonoBehaviour
         CanvasGroup toGroup = screen.GetComponent<CanvasGroup>();
 
         screen.gameObject.SetActive(true);
+        if (fromGroup != null)
+        {
+            fromGroup.blocksRaycasts = false;
+            fromGroup.interactable = false;
+        }
+
         if (toGroup != null)
         {
             toGroup.alpha = 0f;

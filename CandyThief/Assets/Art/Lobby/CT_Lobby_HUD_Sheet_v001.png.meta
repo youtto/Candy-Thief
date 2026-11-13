@@ -1,0 +1,394 @@
+fileFormatVersion: 2
+guid: 46e9ff66acd8aca4994df58c3d13fc8b
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 416668841286406283
+    second: CT_Lobby_HUD_Sheet_v001_0
+  - first:
+      213: -6132158050199656059
+    second: CT_Lobby_HUD_Sheet_v001_1
+  - first:
+      213: -907328944356866836
+    second: CT_Lobby_HUD_Sheet_v001_2
+  - first:
+      213: 5811744691411558994
+    second: CT_Lobby_HUD_Sheet_v001_3
+  - first:
+      213: 4901726284827535079
+    second: CT_Lobby_HUD_Sheet_v001_4
+  - first:
+      213: 2793856124960491107
+    second: CT_Lobby_HUD_Sheet_v001_5
+  - first:
+      213: 7625335247109276041
+    second: CT_Lobby_HUD_Sheet_v001_6
+  - first:
+      213: 7657572711441600325
+    second: HUD_AvatarFrame
+  - first:
+      213: 2112074461479965731
+    second: HUD_NicknamePlate
+  - first:
+      213: -5061168941624112319
+    second: HUD_EnergyIcon
+  - first:
+      213: 1485449877701523158
+    second: HUD_EnergyChip
+  - first:
+      213: -5703898428717256625
+    second: HUD_GoldIcon
+  - first:
+      213: 449507479114840035
+    second: HUD_GoldChip
+  - first:
+      213: 9134881418072767289
+    second: HUD_CandyIcon
+  - first:
+      213: -2109333624370726468
+    second: HUD_CandyChip
+  - first:
+      213: 2736093172007901116
+    second: HUD_Settings
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationMethod: 0
+  spriteTessellationDetail: -1
+  spriteGeometrySubdivision: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HUD_AvatarFrame
+      rect:
+        serializedVersion: 2
+        x: 22
+        y: 179
+        width: 145
+        height: 144
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54f833b3fc9254a60800000000000000
+      internalID: 7657572711441600325
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_NicknamePlate
+      rect:
+        serializedVersion: 2
+        x: 184
+        y: 208
+        width: 321
+        height: 94
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32410bf48889f4d10800000000000000
+      internalID: 2112074461479965731
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_EnergyIcon
+      rect:
+        serializedVersion: 2
+        x: 533
+        y: 203
+        width: 89
+        height: 102
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14b414ea9ad13c9b0800000000000000
+      internalID: -5061168941624112319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_EnergyChip
+      rect:
+        serializedVersion: 2
+        x: 629
+        y: 215
+        width: 146
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6d6fb042bc06d9410800000000000000
+      internalID: 1485449877701523158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_GoldIcon
+      rect:
+        serializedVersion: 2
+        x: 805
+        y: 202
+        width: 101
+        height: 104
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f403661899ea7d0b0800000000000000
+      internalID: -5703898428717256625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_GoldChip
+      rect:
+        serializedVersion: 2
+        x: 908
+        y: 215
+        width: 155
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3e77580bba8fc3600800000000000000
+      internalID: 449507479114840035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_CandyIcon
+      rect:
+        serializedVersion: 2
+        x: 1099
+        y: 209
+        width: 144
+        height: 94
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93b3b85404e95ce70800000000000000
+      internalID: 9134881418072767289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_CandyChip
+      rect:
+        serializedVersion: 2
+        x: 1246
+        y: 215
+        width: 143
+        height: 81
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb9789e8e342ab2e0800000000000000
+      internalID: -2109333624370726468
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HUD_Settings
+      rect:
+        serializedVersion: 2
+        x: 1413
+        y: 201
+        width: 103
+        height: 105
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cb717e55e3e88f520800000000000000
+      internalID: 2736093172007901116
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      CT_Lobby_HUD_Sheet_v001_0: 416668841286406283
+      CT_Lobby_HUD_Sheet_v001_1: -6132158050199656059
+      CT_Lobby_HUD_Sheet_v001_2: -907328944356866836
+      CT_Lobby_HUD_Sheet_v001_3: 5811744691411558994
+      CT_Lobby_HUD_Sheet_v001_4: 4901726284827535079
+      CT_Lobby_HUD_Sheet_v001_5: 2793856124960491107
+      CT_Lobby_HUD_Sheet_v001_6: 7625335247109276041
+      HUD_AvatarFrame: 7657572711441600325
+      HUD_CandyChip: -2109333624370726468
+      HUD_CandyIcon: 9134881418072767289
+      HUD_EnergyChip: 1485449877701523158
+      HUD_EnergyIcon: -5061168941624112319
+      HUD_GoldChip: 449507479114840035
+      HUD_GoldIcon: -5703898428717256625
+      HUD_NicknamePlate: 2112074461479965731
+      HUD_Settings: 2736093172007901116
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

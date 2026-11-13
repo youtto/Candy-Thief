@@ -92,6 +92,10 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 
 **Why:** Owner requested the hub UI before M1-4 ActionResolver. GDD core loop remains Title → Shop Select for the heist; Lobby is an extra hub before shop select.
 
+**Superseded by D-018:** Title auto-enter Lobby is replaced by nickname login. Hub Title → Lobby → Shop Select still stands.
+
+**Superseded in part by D-020:** Lobby energy / gold / candy widgets are no longer display-only placeholders. Gacha, companions, and other hub menus stay “준비 중”.
+
 ### D-013 — Repeatable is post-success reappearance (2026-11-06)
 
 **Decision:** `Repeatable` on `ActionTable` / `EventTable` is not an attempt counter. It is whether a row may reappear after a **success** in the same run.
@@ -148,6 +152,68 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 
 **Why:** Owner approved M1-8.5 with P0 character reactions and `[계속]` hold UX.
 
+### D-017 — Art production pipeline (2026-11-10)
+
+**Decision:** All Candy Thief art (title, lobby, characters, backgrounds, props, UI) follows `Docs/Art/SCENARIO_PIPELINE.md`. Visual style stays `ART_STYLE_GUIDE.md`.
+
+1. Prefer reusable independent assets (background, characters, props, logo, UI widgets). Composite plates are allowed when cost outweighs reuse; report the reason.
+2. Image generation and visual edits go through Scenario AI. Cursor does not create or retouch pixels (Pillow, chroma-key, local inpaint, crop-from-comp, flood fill).
+3. Approved comps are design references. Needed layers are regenerated as new Scenario assets, not extracted from the plate.
+4. Decide layering per job (reuse, animation, Unity control, CU). Estimate CU with `dry_run` and wait for approval. No extra retries or model swaps without approval.
+5. ART-TTL-002 v002 remains the approved title comp. Failed cutouts/inpaints are not final. Title layers, if made later, are new Scenario sprites. Passed independent UI (`ART-TTL-005` / `ART-TTL-006`) may be reused. Using v002 as a single Unity image is allowed.
+
+**Why:** ART-TTL-002 local/851 extraction damaged outlines, dropped overlapping hands/props, and left background matte. Owner replaced that pipeline.
+
+**Follow-through:** Historical local extracts (early ART-LOB-002, blink Closed v001, TTL-002 cutouts) stay on disk and are not a template. Existing Integrated art is unchanged until a separate Unity task.
+
+**Exception (2026-11-12, owner):** Non-game geometric silhouette guides may be drawn locally (Python/SVG) and uploaded to Scenario as shape references only. Do not crop or retouch existing art. Do not use these guides as Unity sprites. This does not lift the D-017 ban on extracting or retouching production art.
+
+### D-018 — Title nickname login (2026-11-10)
+
+**Decision:** Title stays until the player submits a valid nickname. Lobby is entered only after a successful local profile login. D-012 auto-lobby after ~1 second is retired.
+
+- Title plate is ART-TTL-002 v002 (`Assets/Art/Title/CT_Title_Day_v002.png`). `CT_Title_A_v001` is preserved and unused.
+- Nickname frame is ART-TTL-005 v001. CTA remains ART-TTL-006 v002. No new Scenario images.
+- Nickname 2–12 chars, Hangul / English / digits, trim, case-insensitive identity. Duplicate nickname loads the existing profile and keeps the stored display string.
+- Profiles are JSON at `Application.persistentDataPath/CandyThief/profiles.json`. This is not P-010 (M4 PlayerPrefs). Do not overwrite other nicknames or wipe a corrupt file.
+- Last nickname is restored into the input on relaunch. Do not auto-login.
+- Save failure or invalid input stays on Title and shows TMP error copy.
+
+**Why:** Owner requested M1 title art swap plus local nickname login in one pass.
+
+**Follow-through:** Fade, lobby art/animation, and run flow stay as before. Progress/currency per profile is later work. P-010 remains M4.
+
+### D-019 — Scene-authored static UI (2026-11-11)
+
+**Decision:** Designers edit static UI in Unity Editor. Code owns behavior, not RectTransform layout.
+
+- Static screens (title, lobby, settings, shop, fixed HUD) live in a scene or prefab. Hierarchy selection, Scene View move, Inspector size/color/sprite, and scene save must work in Edit Mode and persist through Play Mode.
+- Dynamic UI (inventory slots, repeating lists, rewards, data-driven rows, toasts) may instantiate from prefabs at runtime.
+- Do not hardcode RectTransform anchors/size in runtime `Awake`/`Start` unless the widget is generated from data. Do not rebuild a saved scene layout on play.
+- Title UI is scene-authored on `Title.unity` (`TitleCanvas`). Lobby is scene- and Prefab-authored (`Assets/Prefabs/V02/UI/Lobby.prefab`, instance under Title SafeArea; edit/preview scene `Assets/Scenes/V02/Lobby.unity`). Shop Select / debug / Coming Soon remain runtime-built until a later pass. Bake menus create Title/Lobby UI only when absent.
+
+**Why:** Runtime-built title UI could not be tuned in Edit Mode.
+
+**Follow-through:** Keep sprites on the Image components. `V02LobbyArtController` binds Background/Thief and must not overwrite RectTransforms. Play the open scene; do not force Play Mode onto Title.unity.
+
+### D-020 — Lobby HUD currencies and bottom actions (2026-11-11)
+
+**Decision:** Lobby HUD shows real saved values for nickname, energy, gold, and candy. D-012 placeholder policy for those four widgets is replaced. Other hub menus stay unimplemented.
+
+- **Nickname:** D-018 `V02LocalProfileService` display string. No second identity store.
+- **Energy (행동력):** integer, new player 10, max 20, regen 1 per 10 minutes from saved timestamp (including while the app is closed). Spend amount and spend timing are **not** defined; do not invent a consume rule.
+- **Gold:** integer wallet on the profile. Display with the shared abbreviation helper. Grant source and formula are **not** defined; HUD shows 0 until a later decision. Do not add a gold grant.
+- **Candy (lobby):** cumulative `finalReward` after a run ends. This pass stores and displays the integer only. Computing and granting `finalReward` stays M1-9. Fail / non-win grant is 0 (D-009). This is not `RunState.Candy` and not cosmetic `cosmetic_point`.
+- **Save:** extend D-018 JSON (`profiles.json`) per nickname. Do not use P-010 PlayerPrefs for these fields. Do not wipe other nicknames or corrupt files.
+- **Abbreviation:** gold full digits through 9,999 then K/M/B with one decimal, trim trailing `.0`, floor so display never exceeds the real integer. Candy full digits through 999, then the same K/M/B rule.
+- **Bottom buttons, left → right:** 크루 (mint, 준비 중) · 작전 시작 (yellow, slightly emphasized, Shop Select) · 강화 (coral, 준비 중). Hangul and icons are baked into the button sprites (title CTA exception). No TMP duplicate on those three. Label was `업그레이드`; owner changed it to `강화` (2026-11-12).
+- **HUD art:** chrome and icons only. Nickname, energy, gold, candy values are TMP. No XP bar, no currency `+` buttons. Settings icon stays and shows 준비 중. Profile avatar stays (reuse idle display sprite in the frame). Companion `+` slots are removed from the lobby layout.
+- **Art reuse:** `CT_Lobby_Background_v002`, `CT_Lobby_Thief_Idle_v007_display230`, existing blink frames. Do not regenerate them. Idle/blink stay.
+
+**Why:** Owner closed Phase A conflicts and asked for a REF-UI-003-like lobby with real HUD numbers, without implementing spend or gold income yet.
+
+**Follow-through:** Crew v003 / Start v003 / Enhance v002 and HUD sheet `CT_Lobby_HUD_Sheet_v001` are art-approved and placed on the scene-authored lobby. Gold stays 0 until a grant rule exists. Do not grant candy until M1-9 `finalReward`.
+
 ## Superseded — v0.1
 
 | Old decision | Status |
@@ -193,3 +259,9 @@ Title has no start button: show at least 1 second, then auto-enter Lobby when CS
 | Repeatable=1-only fail retry vs D-013 | D-013: fail-retry for Repeatable 0 and 1; Repeatable=0 blocks only after success. EventID uses the same meaning (D-015) |
 | ACT_013 Notes skip-roll vs GDD chance formula | D-014: escape and ACT_013 use the same success roll; meeting conditions does not auto-win; Notes updated; no new escape rows |
 | Event success timing / PhaseFilter snapshot | D-015: option chance roll; pre-action phase; inclusive alert/turn windows; pending blocks actions |
+| Comp crop / local retouch vs independent sprites | D-017: Scenario regen only. Historical extracts stay on disk, not a template |
+| Always-split layers vs cost | D-017: independent assets preferred; composite allowed when reuse/anim value is low — report why |
+| Title auto-lobby vs nickname login | D-018: Title waits for valid nickname login; D-012 auto-enter is retired. P-010 PlayerPrefs is still M4 |
+| Runtime UI build vs Editor layout | D-019: static UI is scene/prefab authored; runtime instantiate is for repeating/data-driven widgets only |
+| Lobby placeholder HUD vs live currencies | D-020: nickname / energy / gold / candy HUD are live saved values. Gold stays 0 until a grant rule exists. Lobby candy is cumulative `finalReward` (grant in M1-9). Gacha and companions stay “준비 중” |
+| REF-UI-003 button order vs lobby CTA | D-020: left 크루, center 작전 시작 (yellow, slight emphasis), right 강화. Not the reference’s left-start layout |

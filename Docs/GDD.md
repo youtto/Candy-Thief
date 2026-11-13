@@ -38,7 +38,7 @@ Do not create a new Unity project. Do not delete existing scenes, scripts, or as
 
 Title → Lobby → Shop Selection → Move → Infiltrate → Loot → Escape → Result → Retry / Title
 
-Lobby is a hub before shop select (D-012). It does not change run rules. Unimplemented hub menus show “준비 중” only.
+Lobby is a hub before shop select (D-012). It does not change run rules. Nickname, energy, gold, and candy on the lobby HUD are live saved values (D-020). Unimplemented hub menus still show “준비 중”. Title stays until nickname login succeeds (D-018).
 
 Shop selection happens at run start. Each `ShopTable` row changes:
 
@@ -243,7 +243,7 @@ Screen layout:
 
 M1: placeholder UI only. Final art in later milestones.
 
-Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). In-run placeholder HUD is M1-8 (`RunHud` prefab). Choice results use M1-8.5 feedback (D-016): comic success/fail copy, character reaction, actual snapshot deltas, then `[계속]`. Result screen remains M1-9 / M2.
+Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). Title requires a local nickname login before Lobby (D-018). In-run placeholder HUD is M1-8 (`RunHud` prefab). Choice results use M1-8.5 feedback (D-016): comic success/fail copy, character reaction, actual snapshot deltas, then `[계속]`. Result screen remains M1-9 / M2.
 
 ## Art direction (still valid)
 

@@ -8,6 +8,7 @@ alwaysApply: true
 - `Docs/GDD.md` is the approved gameplay source of truth; `Docs/DECISIONS.md` records approved changes. If unclear, ask; do not invent rules.
 - Inspect relevant files before editing. Modify the fewest files possible; no unrelated refactors, packages, or features.
 - Prefer simple built-in Unity components; serialized Inspector fields for tuning. Avoid speculative abstractions.
+- Static hub screens (title, lobby, shop, result, fixed HUD) are scene- or Prefab-authored (D-019). Edit Mode must show the layout without Play Mode. Runtime binds data/clicks only; do not rebuild or overwrite RectTransforms on play. Repeating/data-driven widgets may instantiate from Prefabs. Edit Mode layout must match Play Mode.
 - Do not claim Unity compilation, Play Mode, MCP, or browser testing unless actually performed.
 - After edits report only: changed files, what works, test evidence, blockers. Keep concise.
 

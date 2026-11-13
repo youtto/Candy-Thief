@@ -107,7 +107,9 @@ RNG: `UnityEngine.Random` unless P-006 requires a seed.
 ### UI
 
 - v0.2 start scene: `Assets/Scenes/V02/Title.unity` (D-012). Do not reuse `SampleScene` as the production HUD. `SampleScene` stays in the project, not first in Build Settings.
-- Hub screens in that scene: Title, Lobby, Shop Select (D-012). After shop pick, instantiate `Resources/V02/UI/RunHud` under the same Canvas SafeArea (M1-8).
+- Hub screens in that scene: Title, Lobby, Shop Select (D-012). Title waits for nickname login (D-018) before Lobby. After shop pick, instantiate `Resources/V02/UI/RunHud` under the same Canvas SafeArea (M1-8).
+- Title UI is scene-authored under `TitleCanvas` (D-019). Lobby is scene/Prefab-authored (`Assets/Scenes/V02/Lobby.unity`, `Assets/Prefabs/V02/UI/Lobby.prefab`). Edit Mode layout is the source of truth. Runtime code binds login/fade/HUD numbers only.
+- Static UI (title, lobby, settings, shop, fixed HUD) belongs in a scene or prefab. Dynamic UI (lists, slots, toasts) may spawn from prefabs. Do not reset saved RectTransforms on play.
 - Canvas Scaler: Scale With Screen Size, 1080×1920, match width or height 0.5.
 - Safe Area wrapper on the hub root. Run HUD stretches inside it.
 - Prefabs: `RunHud.prefab` + `ChoiceButton.prefab`. Layout is Inspector-editable. Choice count Instantiates from CSV.
@@ -120,6 +122,8 @@ RNG: `UnityEngine.Random` unless P-006 requires a seed.
 
 `TEMP`: `PlayerPrefs` keys for best score, cumulative candy/runs, achievement id list.  
 Do not store run power-ups. Cosmetic currency cannot modify `ActionTable` chances.
+
+M1 nickname profiles (D-018) are separate: JSON at `Application.persistentDataPath/CandyThief/profiles.json`. D-020 energy / gold / lobby-candy (cumulative `finalReward`) extend this file per nickname. Do not use P-010 PlayerPrefs for those fields. Gold grant is not implemented (display 0). `finalReward` grant is M1-9.
 
 ## Reuse vs new
 

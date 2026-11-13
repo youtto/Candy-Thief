@@ -11,7 +11,7 @@ Do not start a work package that contradicts GDD. CSV numeric values are not tas
 | M1-1 | CSV contract | Closed: files in `Assets/Resources/Table`; see D-008. P-005/D-010, P-012/D-009, P-013/D-011 closed |
 | M1-2 | CSV loader (UTF-8 BOM, header, lookup by ID) | Nine gameplay CSVs load; skip `README.csv`; missing/duplicate ID logs a clear error |
 | M1-3 | Run state: turns, alert, candy, phase, last action result, run status | Done: `RunState` starts from ShopID; integer candy; D-011 end checks; ended runs reject mutation. No chance roll, no `finalReward` |
-| M1-UI-1 | Title / Lobby / Shop Select hub | Done: portrait 1080×1920 Title auto-advances to Lobby; Shop Select uses enabled ShopTable rows; selected ShopID starts `RunState`; no run gameplay UI |
+| M1-UI-1 | Title / Lobby / Shop Select hub | Done: portrait 1080×1920 Title waits for nickname login (D-018) then Lobby; Title UI is scene-authored (D-019); Shop Select uses enabled ShopTable rows; selected ShopID starts `RunState`; no run gameplay UI |
 | M1-4 | Action resolve: chance, turn cost, success/fail effects | Done: `ActionResolver` rolls `SuccessRate + Shop.SuccessRateBonusPp` (clamped); applies CSV cost/deltas via `RunState`; D-011 end checks. Event roll is M1-7. StageTable.xlsx is not loaded |
 | M1-5 | Required-action retry | After fail, the same required action can be chosen again until win/fail |
 | M1-6 | End checks: turns ≤ 0 or alert ≥ 100 fail; win not required in M1 if Escape is stubbed | Fail paths fire before any event UI |
