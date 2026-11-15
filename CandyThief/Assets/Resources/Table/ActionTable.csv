@@ -1,14 +1,62 @@
-﻿ActionID,PhaseID,ActionType,ActionName,Description,SuccessRate,TurnCost,FailAlert,SuccessCandy,SuccessAlert,FailCandy,SuccessTurnDelta,FailTurnDelta,Repeatable,ShowCondition,SuccessNextPhase,EventEligible,Enabled,Notes
-ACT_001,MOVE,REQUIRED,골목길 이동,멀지만 안전한 골목길,90,3,5,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
-ACT_002,MOVE,REQUIRED,자전거 이동,조금 빠르게 이동한다,70,2,10,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
-ACT_003,MOVE,REQUIRED,지름길 질주,빠르지만 들킬 수 있다,40,1,20,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,
-ACT_004,INFILTRATE,REQUIRED,자물쇠 따기,시간을 들여 문을 연다,80,3,10,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
-ACT_005,INFILTRATE,REQUIRED,뒷문 침입,뒷문으로 몰래 들어간다,50,2,15,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
-ACT_006,INFILTRATE,REQUIRED,환풍구 잠입,위험한 지름길을 선택한다,30,1,25,0,0,0,0,0,1,ALWAYS,LOOT,1,1,
-ACT_007,LOOT,REQUIRED,진열대 털기,안전하게 사탕을 챙긴다,90,2,5,100,0,0,0,0,1,ALWAYS,LOOT,1,1,첫 성공 후 ESCAPE 선택 가능
-ACT_008,LOOT,REQUIRED,창고 털기,더 많은 사탕을 노린다,60,2,15,300,0,0,0,0,1,ALWAYS,LOOT,1,1,
-ACT_009,LOOT,REQUIRED,금고 털기,고위험 고보상,30,3,30,700,0,0,0,0,1,ALWAYS,LOOT,1,1,
-ACT_010,ESCAPE,REQUIRED,정문 탈출,조심스럽게 탈출한다,80,3,10,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
-ACT_011,ESCAPE,REQUIRED,담장 넘기,담장을 넘어서 탈출한다,60,2,20,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
-ACT_012,ESCAPE,REQUIRED,하수구 탈출,빠르게 도망친다,30,1,30,0,0,0,0,0,1,ALWAYS,RESULT,1,1,
-ACT_013,LOOT,OPTIONAL,서둘러 탈출 준비,추가 털이를 종료하고 탈출한다,100,0,0,0,0,0,0,0,1,CANDY_AT_LEAST_1,ESCAPE,0,1,일반 행동과 동일한 성공률 판정 후 ESCAPE 전환. 조건 충족만으로 자동 성공하지 않음
+ActionID,PhaseID,ActionType,ActionName,Description,SuccessRate,TurnCost,FailAlert,SuccessCandy,SuccessAlert,FailCandy,SuccessTurnDelta,FailTurnDelta,Repeatable,ShowCondition,SuccessNextPhase,EventEligible,Enabled,Notes,ActionStance,SpawnWeight,ImageKey,SuccessCandyMin,SuccessCandyMax
+ACT_001,MOVE,REQUIRED,골목길 이동,멀지만 안전한 골목길,90,3,5,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,,STABLE,1,,0,0
+ACT_002,MOVE,REQUIRED,자전거 이동,조금 빠르게 이동한다,70,2,10,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,,STABLE,1,,0,0
+ACT_003,MOVE,REQUIRED,지름길 질주,빠르지만 들킬 수 있다,40,1,20,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,,RISKY,1,,0,0
+ACT_004,INFILTRATE,REQUIRED,자물쇠 따기,시간을 들여 문을 연다,80,3,10,0,0,0,0,0,1,ALWAYS,LOOT,1,1,,STABLE,1,,0,0
+ACT_005,INFILTRATE,REQUIRED,뒷문 침입,뒷문으로 몰래 들어간다,50,2,15,0,0,0,0,0,1,ALWAYS,LOOT,1,1,,RISKY,1,,0,0
+ACT_006,INFILTRATE,REQUIRED,환풍구 잠입,위험한 지름길을 선택한다,30,1,25,0,0,0,0,0,1,ALWAYS,LOOT,1,1,,RISKY,1,,0,0
+ACT_007,LOOT,REQUIRED,진열대 털기,안전하게 사탕을 챙긴다,90,2,5,100,0,0,0,0,1,ALWAYS,LOOT,1,1,첫 성공 후 ESCAPE 선택 가능,STABLE,1,,100,100
+ACT_008,LOOT,REQUIRED,창고 털기,더 많은 사탕을 노린다,60,2,15,300,0,0,0,0,1,ALWAYS,LOOT,1,1,,RISKY,1,,300,300
+ACT_009,LOOT,REQUIRED,금고 털기,고위험 고보상,30,3,30,700,0,0,0,0,1,ALWAYS,LOOT,1,1,,RISKY,1,,700,700
+ACT_010,ESCAPE,REQUIRED,정문 탈출,조심스럽게 탈출한다,80,3,10,0,0,0,0,0,1,ALWAYS,RESULT,1,1,,STABLE,1,,0,0
+ACT_011,ESCAPE,REQUIRED,담장 넘기,담장을 넘어서 탈출한다,60,2,20,0,0,0,0,0,1,ALWAYS,RESULT,1,1,,RISKY,1,,0,0
+ACT_012,ESCAPE,REQUIRED,하수구 탈출,빠르게 도망친다,30,1,30,0,0,0,0,0,1,ALWAYS,RESULT,1,1,,RISKY,1,,0,0
+ACT_013,LOOT,OPTIONAL,서둘러 탈출 준비,추가 털이를 종료하고 탈출한다,100,0,0,0,0,0,0,0,1,CANDY_AT_LEAST_1,ESCAPE,0,1,일반 행동과 동일한 성공률 판정 후 ESCAPE 전환. 조건 충족만으로 자동 성공하지 않음,STABLE,0,,0,0
+ACT_014,MOVE,REQUIRED,인파에 섞이기,손님들 틈에 섞여 가게로 향한다,85,3,7,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_015,MOVE,REQUIRED,배달 수레 얻어타기,배달 수레 뒤에 숨어 이동한다,75,2,11,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_016,MOVE,REQUIRED,시장 골목 우회,사람이 적은 골목으로 돌아간다,95,4,4,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_017,MOVE,REQUIRED,버스 정류장 경유,정류장을 지나 자연스럽게 접근한다,80,3,8,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_018,MOVE,REQUIRED,지붕 위 지름길,낮은 지붕을 건너 가게로 향한다,45,1,22,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_019,MOVE,REQUIRED,택배 상자 위장,상자 뒤에 숨어 빠르게 접근한다,60,2,17,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_020,MOVE,REQUIRED,골목 담장 넘기,담장을 넘어 경비의 시선을 피한다,55,1,23,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_021,MOVE,REQUIRED,가판대 사이 질주,가판대를 가로질러 시간을 아낀다,35,1,27,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_022,MOVE,REQUIRED,야간 청소차 따라가기,청소차 뒤편에 바짝 붙어 이동한다,70,2,12,0,0,0,0,0,1,ALWAYS,INFILTRATE,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_023,INFILTRATE,REQUIRED,직원 출입문 노크,직원인 척 출입문을 통과한다,75,3,10,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_024,INFILTRATE,REQUIRED,창문 걸쇠 풀기,창문 걸쇠를 조용히 풀어낸다,85,3,8,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_025,INFILTRATE,REQUIRED,물품 반입구 접근,물품 반입 동선을 따라 들어간다,80,3,9,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_026,INFILTRATE,REQUIRED,창고 문틈 비집기,작은 문틈으로 몸을 밀어 넣는다,55,2,17,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_027,INFILTRATE,REQUIRED,환기 덕트 기어가기,덕트를 기어가 내부로 들어간다,35,1,28,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_028,INFILTRATE,REQUIRED,셔터 틈 통과,셔터가 닫히기 전에 몸을 넣는다,45,1,24,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_029,INFILTRATE,REQUIRED,후문 비밀번호 추측,흔적을 보고 비밀번호를 맞힌다,40,2,22,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_030,INFILTRATE,REQUIRED,배달원 행세,배달원인 척 자연스럽게 들어간다,70,2,13,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_031,INFILTRATE,REQUIRED,진열장 뒤 숨기,진열장 뒤쪽 통로로 들어간다,90,4,6,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_032,INFILTRATE,REQUIRED,천장 점검구 열기,점검구를 열고 안으로 내려간다,50,2,20,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_033,INFILTRATE,REQUIRED,청소 도구함 잠입,도구함에 숨어 문이 열리길 기다린다,90,4,7,0,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_034,LOOT,REQUIRED,사탕 바구니 챙기기,가까운 바구니에서 조금씩 챙긴다,95,2,4,60,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,60,60
+ACT_035,LOOT,REQUIRED,할인 진열대 훑기,눈에 덜 띄는 진열대를 훑는다,90,2,6,110,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,110,110
+ACT_036,LOOT,REQUIRED,포장대 서랍 열기,포장대 서랍에서 사탕을 찾아낸다,85,2,8,140,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,140,140
+ACT_037,LOOT,REQUIRED,시식 코너 챙기기,시식 코너의 사탕을 조용히 모은다,95,3,4,130,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,130,130
+ACT_038,LOOT,REQUIRED,계산대 옆 상자,계산대 옆 상자를 슬쩍 뒤진다,80,2,10,180,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,180,180
+ACT_039,LOOT,REQUIRED,선물 세트 빼돌리기,선물 세트 몇 개를 가방에 넣는다,75,2,12,220,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,220,220
+ACT_040,LOOT,REQUIRED,진열장 아래 탐색,진열장 아래 숨겨진 사탕을 찾는다,85,3,8,240,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,240,240
+ACT_041,LOOT,REQUIRED,포장 상자 통째로,포장 상자를 통째로 들고 나온다,60,2,18,350,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,350,350
+ACT_042,LOOT,REQUIRED,한정판 캔디 노리기,눈에 띄는 한정판을 노린다,50,2,22,420,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,420,420
+ACT_043,LOOT,REQUIRED,고급 초콜릿 싹쓸이,비싼 초콜릿을 한꺼번에 챙긴다,45,2,25,500,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,500,500
+ACT_044,LOOT,REQUIRED,진열장 잠금 해제,잠긴 진열장을 열어 사탕을 꺼낸다,55,3,20,560,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,560,560
+ACT_045,LOOT,REQUIRED,사탕 탑 무너뜨리기,사탕 탑을 건드리며 잽싸게 챙긴다,35,1,30,280,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,280,280
+ACT_046,LOOT,REQUIRED,창고 상자 뒤지기,창고 상자를 열어 숨은 사탕을 찾는다,65,3,18,480,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,480,480
+ACT_047,LOOT,REQUIRED,비밀 선반 털기,비밀 선반에 놓인 사탕을 챙긴다,40,2,27,600,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,600,600
+ACT_048,LOOT,REQUIRED,대형 캔디 통 들기,무거운 캔디 통을 통째로 가져간다,30,3,35,850,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,850,850
+ACT_049,LOOT,REQUIRED,계산대 아래 봉투,계산대 아래 봉투를 조심히 챙긴다,80,3,9,260,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,260,260
+ACT_050,LOOT,REQUIRED,시즌 상품 가로채기,시즌 상품 꾸러미를 빼돌린다,55,2,23,450,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,450,450
+ACT_051,LOOT,REQUIRED,사탕 샘플 모으기,작은 샘플을 여러 개 모은다,95,3,5,160,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,160,160
+ACT_052,LOOT,REQUIRED,사탕 자판기 열기,자판기 보관함을 몰래 열어본다,45,2,26,540,0,0,0,0,1,ALWAYS,LOOT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,540,540
+ACT_053,ESCAPE,REQUIRED,뒷골목으로 빠지기,사람 없는 뒷골목으로 빠져나간다,85,3,8,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_054,ESCAPE,REQUIRED,배달차 뒤에 숨기,배달차 뒤에 숨어 가게를 벗어난다,75,2,12,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_055,ESCAPE,REQUIRED,직원 출입구 탈출,직원 출입구를 통해 자연스럽게 나간다,80,3,10,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_056,ESCAPE,REQUIRED,사람들 틈에 섞이기,손님들 사이로 조용히 사라진다,90,4,6,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,STABLE,1,,0,0
+ACT_057,ESCAPE,REQUIRED,창문 밖으로 뛰기,열린 창문으로 단숨에 빠져나간다,45,1,25,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_058,ESCAPE,REQUIRED,비상구 전력 질주,비상구로 빠르게 달려 나간다,55,1,22,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_059,ESCAPE,REQUIRED,환풍구 역주행,들어온 환풍구를 따라 탈출한다,50,2,20,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_060,ESCAPE,REQUIRED,담장 아래 미끄러지기,담장 아래 틈으로 빠져나간다,60,2,17,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0
+ACT_061,ESCAPE,REQUIRED,수레에 올라타기,움직이는 수레에 올라타 도망친다,40,1,28,0,0,0,0,0,1,ALWAYS,RESULT,1,1,AI 초안: 밸런스 검수 필요,RISKY,1,,0,0

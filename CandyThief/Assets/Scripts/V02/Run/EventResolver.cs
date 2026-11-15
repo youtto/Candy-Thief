@@ -230,6 +230,7 @@ public sealed class EventResolver
         ShopRow shop;
         if (!database.TryGetShop(run.ShopID, out shop))
             return;
+        shop = run.Shop ?? shop; // 런 시작 스냅샷. 이벤트 추첨 규칙은 그대로.
 
         var events = database.EnabledEvents;
         for (int i = 0; i < events.Count; i++)
@@ -444,6 +445,7 @@ public sealed class EventResolver
 
         ShopRow shop;
         database.TryGetShop(run.ShopID, out shop);
+        shop = run.Shop ?? shop;
 
         int chance = ComputeOptionChance(option, shop);
         bool success = chanceRoll.Succeeds(chance);

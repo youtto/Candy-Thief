@@ -2,9 +2,15 @@
 MAX_ALERT,100,INT,경계도 상한. 도달 시 실패,
 EVENT_TRIGGER_RATE,25,INT,일반 행동 종료 후 이벤트 발생 확률(%),이벤트 선택 행동은 재발동하지 않음
 MAX_EVENT_PER_ACTION,1,INT,일반 행동 1회당 이벤트 최대 발생 수,
-MIN_CANDY_TO_ESCAPE,1,INT,탈출 시 필요한 최소 사탕 수,
+MIN_CANDY_TO_ESCAPE,1,INT,탈출 행동 성공으로 승리하는 데 필요한 최소 사탕 수,
 BASE_SCORE_MULTIPLIER,1,FLOAT,기본 점수 배율,
 EVENT_ON_FAILED_ACTION,1,BOOL,일반 행동 실패 후에도 이벤트 판정,종료 조건 충족 시 이벤트 없음
 EVENT_CHAIN_ENABLED,0,BOOL,이벤트 선택 후 이벤트 연쇄 발생 허용 여부,MVP는 비활성
 MAX_SUCCESS_RATE,100,INT,성공률 보정 상한(%),
 MIN_SUCCESS_RATE,0,INT,성공률 보정 하한(%),
+RUMOR_COUNT_WEIGHT_0,40,INT,가게 소문 0개 가중치 (D-026),
+RUMOR_COUNT_WEIGHT_1,45,INT,가게 소문 1개 가중치 (D-026),
+RUMOR_COUNT_WEIGHT_2,15,INT,가게 소문 2개 가중치 (D-026),
+SHOP_LIST_SIZE,4,INT,작전 준비 가게 목록 카드 수 (D-021),
+SHOP_REROLL_FREE_PER_LIST,1,INT,가게 목록당 무료 리롤 횟수 (D-024). 최대 횟수 키는 P-014 확정 전까지 없음,
+ACTION_SELECT_TIME_SEC,30,INT,행동 선택 제한시간(초). 모든 행동 선택 라운드 공통 (D-028),1 미만은 로드 오류. 카운트다운은 PLAY-02

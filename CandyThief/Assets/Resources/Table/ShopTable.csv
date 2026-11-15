@@ -1,4 +1,21 @@
-﻿ShopID,ShopName,Difficulty,StartTurn,StartAlert,SuccessRateBonusPp,CandyMultiplier,EventRateBonusPp,AllowedEventTags,BackgroundImageKey,UnlockCondition,Enabled,Notes
-SHOP_001,동네 사탕 가게,1,15,0,10,1.0,0,COMMON|NEIGHBORHOOD,shop_neighborhood,NONE,1,초급 가게. 수치는 임시값
-SHOP_002,대형 캔디숍,2,18,10,0,1.5,5,COMMON|MALL,shop_mall,NONE,1,중급 가게. 수치는 임시값
-SHOP_003,비밀 사탕 창고,3,22,20,-10,2.5,10,COMMON|WAREHOUSE,shop_warehouse,NONE,1,상급 가게. 수치는 임시값
+﻿ShopID,ShopName,Difficulty,StartTurn,StartAlert,SuccessRateBonusPp,CandyMultiplier,EventRateBonusPp,AllowedEventTags,BackgroundImageKey,UnlockCondition,Enabled,SpawnWeight,DistanceGrade,ScaleGrade,SecurityGrade,GoodsGrade,EnergyCost,Notes
+SHOP_001,토마스 사탕점,1,15,0,10,1.0,0,COMMON|NEIGHBORHOOD,shop_bg_001,NONE,1,100,NEAR,SMALL,LOOSE,NORMAL,0,초급 가게. 판정 수치는 임시값
+SHOP_002,잭의 과자점,2,18,10,0,1.5,5,COMMON|MALL,shop_bg_002,NONE,1,65,MID,MEDIUM,NORMAL,HIGH,0,중급 가게. 판정 수치는 임시값
+SHOP_003,르블랑 백화점,3,22,20,-10,2.5,10,COMMON|WAREHOUSE,shop_bg_003,NONE,1,15,FAR,LARGE,STRICT,TOP,0,상급 가게. 판정 수치는 임시값
+SHOP_004,브라운 솜사탕,1,18,0,10,1.25,5,COMMON,shop_bg_004,NONE,1,85,NEAR,MEDIUM,LOOSE,NORMAL,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_005,로즈 캔디샵,2,15,10,0,1.25,0,COMMON,shop_bg_005,NONE,1,65,MID,SMALL,NORMAL,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_006,밀러 초콜릿,3,18,20,-10,1.50,5,COMMON,shop_bg_006,NONE,1,45,MID,MEDIUM,STRICT,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_007,모리스 제과점,2,18,10,0,1.25,5,COMMON,shop_bg_007,NONE,1,85,NEAR,MEDIUM,NORMAL,NORMAL,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_008,루시의 잡화점,1,15,0,10,1.25,0,COMMON,shop_bg_008,NONE,1,45,FAR,SMALL,LOOSE,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_009,벨라 디저트,2,18,10,0,1.50,5,COMMON,shop_bg_009,NONE,1,60,MID,MEDIUM,NORMAL,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_010,오스카 사탕창고,2,22,10,0,1.75,10,COMMON,shop_bg_010,NONE,1,55,FAR,LARGE,NORMAL,NORMAL,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_011,피에르 공방,3,15,20,-10,1.75,0,COMMON,shop_bg_011,NONE,1,25,FAR,SMALL,STRICT,TOP,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_012,에드가 상회,1,15,0,10,1.75,0,COMMON,shop_bg_012,NONE,1,10,MID,SMALL,LOOSE,TOP,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_013,헨리의 사탕집,1,15,0,10,1.00,0,COMMON,shop_bg_013,NONE,1,100,NEAR,SMALL,LOOSE,NORMAL,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_014,마담 코코,2,18,10,0,2.00,5,COMMON,shop_bg_014,NONE,1,20,MID,MEDIUM,NORMAL,TOP,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_015,올리버 제과점,2,18,10,0,1.50,5,COMMON,shop_bg_015,NONE,1,60,NEAR,MEDIUM,NORMAL,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_016,블랙우드 상점,3,18,20,-10,2.00,5,COMMON,shop_bg_016,NONE,1,20,FAR,MEDIUM,STRICT,TOP,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_017,베니의 젤리샵,1,15,0,10,1.25,0,COMMON,shop_bg_017,NONE,1,45,NEAR,SMALL,LOOSE,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_018,몽슈슈 과자점,1,18,0,10,1.25,5,COMMON,shop_bg_018,NONE,1,80,MID,MEDIUM,LOOSE,NORMAL,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_019,윌슨 무역상,3,22,20,-10,2.00,10,COMMON,shop_bg_019,NONE,1,35,FAR,LARGE,STRICT,HIGH,0,1차 테스트 밸런스 (P-016 승인)
+SHOP_020,도로시 사탕집,2,15,10,0,1.75,0,COMMON,shop_bg_020,NONE,1,25,MID,SMALL,NORMAL,TOP,0,1차 테스트 밸런스 (P-016 승인)

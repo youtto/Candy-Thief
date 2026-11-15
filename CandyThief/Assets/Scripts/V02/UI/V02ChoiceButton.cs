@@ -5,6 +5,14 @@ using UnityEngine.UI;
 
 public sealed class V02ChoiceButton : MonoBehaviour
 {
+    // PLAY-UI-MOCK-v001 카드 비율 (1080×1920 기준 507×623). V02RunHudPrefabBuilder 의 CardSize 와 같아야 한다.
+    public const float SlotWidth = 507f;
+    public const float SlotHeight = 623f;
+    public const string ExecuteLabel = "실행하기";
+
+    static readonly Color ExecuteYellow = new Color(1f, 0.776f, 0.224f, 1f);
+    static readonly Color ExecuteOff = new Color(0.78f, 0.74f, 0.68f, 1f);
+
     [SerializeField] Button button;
     [SerializeField] CanvasGroup canvasGroup;
     [SerializeField] Image typeIcon;
@@ -16,8 +24,13 @@ public sealed class V02ChoiceButton : MonoBehaviour
     [SerializeField] TextMeshProUGUI successText;
     [SerializeField] TextMeshProUGUI failText;
     [SerializeField] TextMeshProUGUI disabledReasonText;
+    [SerializeField] Button candyInfoButton;
+    [SerializeField] Button alertInfoButton;
     [SerializeField] float enabledAlpha = 1f;
     [SerializeField] float disabledAlpha = 0.45f;
+
+    string candyTip = string.Empty;
+    string alertTip = string.Empty;
 
     public string BoundId { get; private set; }
     public bool IsOption { get; private set; }
@@ -25,6 +38,20 @@ public sealed class V02ChoiceButton : MonoBehaviour
     public string CostLabel { get { return costText != null ? costText.text : string.Empty; } }
     public string SuccessLabel { get { return successText != null && successText.gameObject.activeSelf ? successText.text : string.Empty; } }
     public string FailLabel { get { return failText != null && failText.gameObject.activeSelf ? failText.text : string.Empty; } }
+    public string CandyMainLabel { get { return SuccessLabel; } }
+    public string AlertMainLabel { get { return FailLabel; } }
+    public string TooltipLabel { get { return TooltipOpen && tipHost != null ? tipHost.Label : string.Empty; } }
+    public bool TooltipOpen { get { return tipHost != null && tipHost.IsOpen && tipHost.Owner == this; } }
+
+    V02ForecastTip tipHost;
+
+    public void AttachTip(V02ForecastTip tip)
+    {
+        tipHost = tip;
+    }
+    public string DisabledReasonLabel { get { return disabledReasonText != null ? disabledReasonText.text : string.Empty; } }
+
+    bool chromeMissingLogged;
 
     public void Bind(
         string id,
@@ -43,26 +70,47 @@ public sealed class V02ChoiceButton : MonoBehaviour
     {
         BoundId = id;
         IsOption = isOption;
-        EnsureCardFit();
-        EnsureChoiceChrome();
+        ResolveInfoChrome();
+        LayoutElement layout = GetComponent<LayoutElement>();
+        if (layout != null)
+        {
+            layout.preferredWidth = SlotWidth;
+            layout.preferredHeight = SlotHeight;
+            layout.minWidth = SlotWidth;
+            layout.minHeight = SlotHeight;
+            layout.flexibleWidth = 0f;
+            layout.flexibleHeight = 0f;
+        }
+
+        HideTooltip();
         SetIcon(typeIcon, icon);
         SetIcon(costIcon, hourglass);
         SetText(nameText, choiceName);
         SetText(descriptionText, description);
         SetText(chanceText, chance);
         SetText(costText, cost);
-        SetOptionalLine(successText, successOutcome);
-        SetOptionalLine(failText, failOutcome);
-        SetText(disabledReasonText, canExecute ? string.Empty : disabledReason);
-        if (disabledReasonText != null)
-            disabledReasonText.gameObject.SetActive(!canExecute && !string.IsNullOrEmpty(disabledReason));
+        if (successText != null)
+            successText.gameObject.SetActive(false);
+        if (failText != null)
+            failText.gameObject.SetActive(false);
 
         if (canvasGroup != null)
         {
-            canvasGroup.alpha = canExecute ? enabledAlpha : disabledAlpha;
-            canvasGroup.interactable = canExecute;
+            canvasGroup.alpha = 1f;
+            canvasGroup.interactable = true;
             canvasGroup.blocksRaycasts = true;
         }
+
+        if (disabledReasonText != null)
+        {
+            disabledReasonText.gameObject.SetActive(true);
+            SetText(disabledReasonText, canExecute ? ExecuteLabel : disabledReason);
+            disabledReasonText.color = Color.white;
+        }
+
+        Image executePlate = disabledReasonText != null ? disabledReasonText.transform.parent.GetComponent<Image>() : null;
+        if (executePlate != null && disabledReasonText.transform.parent != transform)
+            executePlate.color = canExecute ? ExecuteYellow : ExecuteOff;
 
         if (button != null)
         {
@@ -71,156 +119,131 @@ public sealed class V02ChoiceButton : MonoBehaviour
             if (canExecute && onClick != null)
                 button.onClick.AddListener(onClick);
         }
-
-        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)transform);
     }
 
-    void EnsureCardFit()
+    // 성공 사탕은 최소=최대(현재 SuccessCandy). 위험도 메인 숫자는 실패 변화량.
+    public void BindForecast(int candyMin, int candyMax, int successAlert, int failAlert, Sprite candy, Sprite alert)
     {
-        LayoutElement rootLayout = GetComponent<LayoutElement>();
-        if (rootLayout != null)
-            rootLayout.preferredHeight = -1f;
+        EnsureInfoChrome(candy, alert);
+        if (successText != null)
+        {
+            successText.gameObject.SetActive(true);
+            SetText(successText, Signed(candyMax));
+            successText.color = Color.white;
+            successText.alignment = TextAlignmentOptions.Center;
+        }
 
-        ContentSizeFitter fitter = GetComponent<ContentSizeFitter>();
-        if (fitter == null)
-            fitter = gameObject.AddComponent<ContentSizeFitter>();
-        fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        if (failText != null)
+        {
+            failText.gameObject.SetActive(true);
+            SetText(failText, Signed(failAlert));
+            failText.color = Color.white;
+            failText.alignment = TextAlignmentOptions.Center;
+        }
 
-        Image background = GetComponent<Image>();
-        if (background != null)
-            background.color = new Color(1f, 0.97f, 0.90f, 1f);
+        candyTip = "성공 시 사탕 " + candyMin + "~" + candyMax;
+        alertTip = "실패 시 위험도 " + Signed(failAlert);
+        if (successAlert != 0)
+            alertTip += "\n성공 시 위험도 " + Signed(successAlert);
+        HideTooltip();
     }
 
-    void EnsureChoiceChrome()
+    public void HideTooltip()
     {
-        Transform header = transform.Find("Header");
-        if (header == null)
-        {
-            var headerGo = new GameObject("Header", typeof(RectTransform), typeof(LayoutElement), typeof(HorizontalLayoutGroup));
-            headerGo.transform.SetParent(transform, false);
-            headerGo.transform.SetSiblingIndex(0);
-            LayoutElement headerLayout = headerGo.GetComponent<LayoutElement>();
-            headerLayout.minHeight = 72f;
-            headerLayout.preferredHeight = 76f;
-            HorizontalLayoutGroup headerRow = headerGo.GetComponent<HorizontalLayoutGroup>();
-            headerRow.spacing = 12f;
-            headerRow.childAlignment = TextAnchor.MiddleLeft;
-            headerRow.childControlWidth = true;
-            headerRow.childControlHeight = true;
-            headerRow.childForceExpandWidth = false;
-            headerRow.childForceExpandHeight = true;
-            header = headerGo.transform;
-        }
-
-        if (typeIcon == null)
-        {
-            Transform existing = transform.Find("TypeIcon");
-            if (existing == null)
-                existing = header.Find("TypeIcon");
-            if (existing != null)
-                typeIcon = existing.GetComponent<Image>();
-            else
-                typeIcon = CreateIcon("TypeIcon", header, 64f);
-        }
-
-        if (typeIcon != null && typeIcon.transform.parent != header)
-            typeIcon.transform.SetParent(header, false);
-        if (nameText != null && nameText.transform.parent != header)
-        {
-            nameText.transform.SetParent(header, false);
-            LayoutElement nameLayout = nameText.GetComponent<LayoutElement>();
-            if (nameLayout != null)
-                nameLayout.flexibleWidth = 1f;
-        }
-
-        Transform costRow = transform.Find("CostRow");
-        if (costRow == null && costText != null)
-        {
-            var costGo = new GameObject("CostRow", typeof(RectTransform), typeof(LayoutElement), typeof(HorizontalLayoutGroup));
-            costGo.transform.SetParent(transform, false);
-            LayoutElement costLayout = costGo.GetComponent<LayoutElement>();
-            costLayout.minHeight = 40f;
-            costLayout.preferredHeight = 44f;
-            HorizontalLayoutGroup costGroup = costGo.GetComponent<HorizontalLayoutGroup>();
-            costGroup.spacing = 8f;
-            costGroup.childAlignment = TextAnchor.MiddleLeft;
-            costGroup.childControlWidth = false;
-            costGroup.childControlHeight = true;
-            costGroup.childForceExpandWidth = false;
-            costGroup.childForceExpandHeight = true;
-            costRow = costGo.transform;
-            costText.transform.SetParent(costRow, false);
-        }
-
-        if (costIcon == null)
-        {
-            Transform existing = costRow != null ? costRow.Find("CostIcon") : null;
-            if (existing == null && costText != null)
-                existing = costText.transform.Find("CostIcon");
-            if (existing != null)
-                costIcon = existing.GetComponent<Image>();
-            else if (costRow != null)
-                costIcon = CreateIcon("CostIcon", costRow, 36f);
-        }
-
-        if (costIcon != null && costRow != null && costIcon.transform.parent != costRow)
-            costIcon.transform.SetParent(costRow, false);
-        if (costIcon != null)
-            costIcon.transform.SetSiblingIndex(0);
-        if (costText != null && costRow != null && costText.transform.parent != costRow)
-            costText.transform.SetParent(costRow, false);
-
-        if (nameText != null)
-            nameText.fontSize = 36f;
-        if (chanceText != null)
-        {
-            chanceText.fontSize = 30f;
-            chanceText.fontStyle = FontStyles.Bold;
-        }
-
-        if (costText != null)
-        {
-            costText.fontSize = 30f;
-            costText.fontStyle = FontStyles.Bold;
-        }
-
-        if (descriptionText != null)
-            descriptionText.fontSize = 24f;
-
-        SetSibling(header, 0);
-        SetSibling(chanceText != null ? chanceText.transform : null, 1);
-        SetSibling(costRow, 2);
-        SetSibling(successText != null ? successText.transform : null, 3);
-        SetSibling(failText != null ? failText.transform : null, 4);
-        SetSibling(descriptionText != null ? descriptionText.transform : null, 5);
-        SetSibling(disabledReasonText != null ? disabledReasonText.transform : null, 6);
+        if (tipHost != null && tipHost.Owner == this)
+            tipHost.Hide();
     }
 
-    static void SetSibling(Transform child, int index)
+    void EnsureInfoChrome(Sprite candy, Sprite alert)
     {
-        if (child != null)
-            child.SetSiblingIndex(index);
+        ResolveInfoChrome();
+        ApplyInfoIcon(candyInfoButton, candy);
+        ApplyInfoIcon(alertInfoButton, alert);
+        if ((candyInfoButton == null || alertInfoButton == null) && !chromeMissingLogged)
+        {
+            chromeMissingLogged = true;
+            Debug.LogError("[V02ChoiceButton] 사탕 정보 또는 위험도 정보 버튼이 프리팹에 없습니다.");
+        }
+
+        WireInfo(candyInfoButton, true);
+        WireInfo(alertInfoButton, false);
     }
 
-    public void EnsureRuntimeChrome()
+    void ResolveInfoChrome()
     {
-        EnsureCardFit();
-        EnsureChoiceChrome();
+        if (candyInfoButton == null)
+            candyInfoButton = FindButton("CandyInfo");
+        if (alertInfoButton == null)
+            alertInfoButton = FindButton("AlertInfo");
     }
 
-    static Image CreateIcon(string name, Transform parent, float size)
+    static Transform FindDirect(Transform root, string objectName)
     {
-        var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(LayoutElement));
-        go.transform.SetParent(parent, false);
-        Image image = go.GetComponent<Image>();
-        image.preserveAspect = true;
-        image.raycastTarget = false;
-        LayoutElement layout = go.GetComponent<LayoutElement>();
-        layout.minWidth = size;
-        layout.minHeight = size;
-        layout.preferredWidth = size;
-        layout.preferredHeight = size;
-        return image;
+        if (root == null)
+            return null;
+        for (int i = 0; i < root.childCount; i++)
+        {
+            Transform child = root.GetChild(i);
+            if (child.name == objectName)
+                return child;
+        }
+
+        return null;
+    }
+
+    static Button FindButton(Transform root, string objectName)
+    {
+        Transform existing = FindDirect(root, objectName);
+        if (existing == null)
+            return null;
+        return existing.GetComponent<Button>();
+    }
+
+    Button FindButton(string objectName)
+    {
+        return FindButton(transform, objectName);
+    }
+
+    static void ApplyInfoIcon(Button info, Sprite sprite)
+    {
+        if (info == null)
+            return;
+        Transform icon = FindDirect(info.transform, "Icon");
+        if (icon == null)
+            return;
+        SetIcon(icon.GetComponent<Image>(), sprite);
+    }
+
+    void WireInfo(Button info, bool candy)
+    {
+        if (info == null)
+            return;
+        info.onClick.RemoveAllListeners();
+        info.onClick.AddListener(candy ? (UnityAction)ShowCandyTip : ShowAlertTip);
+    }
+
+    void ShowCandyTip()
+    {
+        ShowTip(candyTip);
+    }
+
+    void ShowAlertTip()
+    {
+        ShowTip(alertTip);
+    }
+
+    void ShowTip(string body)
+    {
+        if (tipHost == null)
+            return;
+        tipHost.Show(this, body);
+    }
+
+    static string Signed(int value)
+    {
+        if (value > 0)
+            return "+" + value;
+        return value.ToString();
     }
 
     static void SetIcon(Image image, Sprite sprite)
@@ -233,16 +256,6 @@ public sealed class V02ChoiceButton : MonoBehaviour
         image.color = Color.white;
     }
 
-    static void SetOptionalLine(TextMeshProUGUI label, string value)
-    {
-        if (label == null)
-            return;
-        bool show = !string.IsNullOrEmpty(value);
-        label.gameObject.SetActive(show);
-        if (show)
-            SetText(label, value);
-    }
-
     static void SetText(TextMeshProUGUI label, string value)
     {
         if (label == null)
@@ -250,12 +263,5 @@ public sealed class V02ChoiceButton : MonoBehaviour
         label.text = value ?? string.Empty;
         label.textWrappingMode = TextWrappingModes.Normal;
         label.overflowMode = TextOverflowModes.Overflow;
-        LayoutElement layout = label.GetComponent<LayoutElement>();
-        if (layout != null)
-        {
-            label.ForceMeshUpdate();
-            float height = Mathf.Max(layout.minHeight, label.preferredHeight);
-            layout.preferredHeight = height;
-        }
     }
 }

@@ -326,6 +326,9 @@ public sealed class V02LocalProfileService
         dest.gold = source.gold;
         dest.candy = source.candy;
         dest.energyUpdatedAt = source.energyUpdatedAt;
+        dest.shopList = source.shopList != null ? source.shopList.Clone() : new V02ShopListState();
+        dest.activeRunId = source.activeRunId ?? "";
+        dest.settledRunId = source.settledRunId ?? "";
     }
 
     bool TryReadStore(out V02ProfileStoreData store, out string error)

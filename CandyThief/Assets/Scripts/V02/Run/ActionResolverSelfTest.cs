@@ -35,7 +35,7 @@ public static class ActionResolverSelfTest
         failed += Expect("7 경계도 실패", TestAlertFail(database));
         failed += Expect("8 탈출 성공 승리", TestEscapeWin(database));
         failed += Expect("9 턴 소진 실패", TestNoTurnsFail(database));
-        failed += Expect("10 D-011 경계도가 탈출 승리보다 우선", TestAlertBeatsEscape(database));
+        failed += Expect("10 탈출 성공은 경계도 상한보다 우선", TestAlertBeatsEscape(database));
         failed += Expect("11 CSV 수치 변경 반영", TestCsvDrivesResult(database));
         failed += Expect("12 실패 후 동일 필수 행동 재시도 성공", TestRetrySameRequiredAfterFail(database));
         failed += Expect("13 실패 후 같은 페이즈 다른 필수 행동 선택", TestRetrySiblingRequiredAfterFail(database));
@@ -54,7 +54,7 @@ public static class ActionResolverSelfTest
         // 26–32: M1-6 end checks / D-014. EventEligible and EventCheckDue live-path coverage is M1-7.
         failed += Expect("26 마지막 턴 탈출 성공 승리", TestLastTurnEscapeWin(database));
         failed += Expect("27 마지막 턴 탈출 실패는 턴 0 실패", TestLastTurnEscapeFail(database));
-        failed += Expect("28 사탕 0 마지막 턴 탈출 성공은 승리 아님", TestLastTurnEscapeSuccessWithoutCandyFails(database));
+        failed += Expect("28 사탕 0 마지막 턴 탈출 성공은 빈손 탈출", TestLastTurnEscapeSuccessWithoutCandyFails(database));
         failed += Expect("29 탈출 조건 충족만으로 자동 성공하지 않음", TestEscapeConditionsDoNotAutoSucceed(database));
         failed += Expect("30 탈출 행동도 동일 성공률 공식", TestEscapeUsesSameSuccessChanceFormula(database));
         failed += Expect("31 턴 델타는 비용 차감 후 종료 판정 전", TestTurnDeltasApplyBeforeEndCheck(database));
@@ -328,9 +328,11 @@ public static class ActionResolverSelfTest
         ActionResolveResult result;
         if (!resolver.TryResolve(run, "ACT_010", out result) || !result.Success)
             return false;
-        return run.Status == RunStatus.Failed
-            && run.FailReason == RunFailReason.AlertLimit
+        return run.Status == RunStatus.Won
+            && run.FailReason == RunFailReason.None
+            && run.Outcome == RunOutcome.OperationSuccess
             && run.Alert == patched.GetInt("MAX_ALERT")
+            && run.CurrentPhase == escape.SuccessNextPhase
             && !result.EventCheckDue;
     }
 
@@ -864,9 +866,11 @@ public static class ActionResolverSelfTest
         return run.RemainingTurns == 0
             && run.Candy == 0
             && run.Status == RunStatus.Failed
-            && run.FailReason == RunFailReason.NoTurns
-            && run.CurrentPhase == "ESCAPE"
+            && run.FailReason == RunFailReason.EmptyEscape
+            && run.Outcome == RunOutcome.EmptyEscape
+            && run.CurrentPhase == escape.SuccessNextPhase
             && run.LastActionResult == RunActionResult.Success
+            && run.SettledCandy == 0
             && EndedRunRejectsFurtherPlay(resolver, run);
     }
 

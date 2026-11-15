@@ -7,3 +7,23 @@ IMG_005,event_candy_box,EVENT,Assets/Art/Events/event_candy_box.png,CANDY_BOX,�
 IMG_006,event_patrol,EVENT,Assets/Art/Events/event_patrol.png,PATROL,손전등을 든 경비의 순찰,NOT_STARTED,PENDING,1,
 IMG_007,event_secret_path,EVENT,Assets/Art/Events/event_secret_path.png,SECRET_PATH,사탕 가게 벽 뒤 비밀 통로,NOT_STARTED,PENDING,1,
 IMG_008,event_lucky_find,EVENT,Assets/Art/Events/event_lucky_find.png,LUCKY_FIND,바닥에서 반짝이는 황금 사탕,NOT_STARTED,PENDING,1,
+IMG_009,shop_bg_001,SHOP,Assets/Art/Shops/shop_bg_001.png,SHOP_BG_001,토마스 사탕점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_010,shop_bg_002,SHOP,Assets/Art/Shops/shop_bg_002.png,SHOP_BG_002,잭의 과자점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_011,shop_bg_003,SHOP,Assets/Art/Shops/shop_bg_003.png,SHOP_BG_003,르블랑 백화점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_012,shop_bg_004,SHOP,Assets/Art/Shops/shop_bg_004.png,SHOP_BG_004,브라운 솜사탕 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_013,shop_bg_005,SHOP,Assets/Art/Shops/shop_bg_005.png,SHOP_BG_005,로즈 캔디샵 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_014,shop_bg_006,SHOP,Assets/Art/Shops/shop_bg_006.png,SHOP_BG_006,밀러 초콜릿 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_015,shop_bg_007,SHOP,Assets/Art/Shops/shop_bg_007.png,SHOP_BG_007,모리스 제과점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_016,shop_bg_008,SHOP,Assets/Art/Shops/shop_bg_008.png,SHOP_BG_008,루시의 잡화점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_017,shop_bg_009,SHOP,Assets/Art/Shops/shop_bg_009.png,SHOP_BG_009,벨라 디저트 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_018,shop_bg_010,SHOP,Assets/Art/Shops/shop_bg_010.png,SHOP_BG_010,오스카 사탕창고 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_019,shop_bg_011,SHOP,Assets/Art/Shops/shop_bg_011.png,SHOP_BG_011,피에르 공방 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_020,shop_bg_012,SHOP,Assets/Art/Shops/shop_bg_012.png,SHOP_BG_012,에드가 상회 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_021,shop_bg_013,SHOP,Assets/Art/Shops/shop_bg_013.png,SHOP_BG_013,헨리의 사탕집 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_022,shop_bg_014,SHOP,Assets/Art/Shops/shop_bg_014.png,SHOP_BG_014,마담 코코 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_023,shop_bg_015,SHOP,Assets/Art/Shops/shop_bg_015.png,SHOP_BG_015,올리버 제과점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_024,shop_bg_016,SHOP,Assets/Art/Shops/shop_bg_016.png,SHOP_BG_016,블랙우드 상점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_025,shop_bg_017,SHOP,Assets/Art/Shops/shop_bg_017.png,SHOP_BG_017,베니의 젤리샵 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_026,shop_bg_018,SHOP,Assets/Art/Shops/shop_bg_018.png,SHOP_BG_018,몽슈슈 과자점 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_027,shop_bg_019,SHOP,Assets/Art/Shops/shop_bg_019.png,SHOP_BG_019,윌슨 무역상 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성
+IMG_028,shop_bg_020,SHOP,Assets/Art/Shops/shop_bg_020.png,SHOP_BG_020,도로시 사탕집 배경. 콘셉트는 별도 기획,NOT_STARTED,PENDING,1,P-016 가게 배경 키. 이미지 미생성

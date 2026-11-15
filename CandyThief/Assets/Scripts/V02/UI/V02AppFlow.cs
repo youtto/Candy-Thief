@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using TMPro;
 using UnityEngine;
@@ -43,6 +44,7 @@ public class V02AppFlow : MonoBehaviour
     [SerializeField] V02LobbyHud lobbyHud;
     [SerializeField] TextMeshProUGUI titleStatus;
     RectTransform shopScreen;
+    V02OperationPrepScreen prepScreen;
     RectTransform debugScreen;
     RectTransform runHudScreen;
     RectTransform comingSoon;
@@ -501,8 +503,61 @@ public class V02AppFlow : MonoBehaviour
     void ShowShopSelect()
     {
         HideComingSoon();
+        if (HasProfile())
+        {
+            ShowOperationPrep();
+            return;
+        }
+
+        // 프로필이 없는 미리보기만 기존 런타임 가게 목록을 유지한다 (D-019). 플레이어 경로는 위의 프리팹 화면이다.
         RebuildShopCards();
         Show(shopScreen);
+    }
+
+    void ShowOperationPrep()
+    {
+        if (!EnsurePrepScreen())
+        {
+            ShowComingSoon("작전 준비");
+            return;
+        }
+
+        CsvDatabase database = CsvDatabase.Current;
+        if (database == null || !database.Loaded)
+            database = CsvDatabase.LoadFromResources();
+
+        bool ready = prepScreen.Open(profiles, database, SelectShop, ShowLobby);
+        Show(prepScreen.Rect);
+        if (!ready)
+            ShowComingSoon("가게 목록");
+    }
+
+    bool EnsurePrepScreen()
+    {
+        if (prepScreen != null)
+            return true;
+        if (safeArea == null)
+            return false;
+
+        Transform existing = safeArea.Find("OperationPrep");
+        if (existing != null)
+            prepScreen = existing.GetComponent<V02OperationPrepScreen>();
+        if (prepScreen != null)
+            return true;
+
+        V02OperationPrepScreen prefab = Resources.Load<V02OperationPrepScreen>(V02OperationPrepScreen.ResourcePath);
+        if (prefab == null)
+        {
+            Debug.LogError("[V02] 작전 준비 프리팹이 없습니다: Resources/" + V02OperationPrepScreen.ResourcePath);
+            return false;
+        }
+
+        prepScreen = Instantiate(prefab, safeArea);
+        prepScreen.name = "OperationPrep";
+        // 루트만 SafeArea에 맞춘다. 카드 RectTransform 은 프리팹 값을 유지한다 (D-019).
+        V02Ui.Stretch(prepScreen.Rect);
+        V02Ui.AddCanvasGroup(prepScreen.Rect);
+        return true;
     }
 
     void RebuildShopCards()
@@ -521,7 +576,29 @@ public class V02AppFlow : MonoBehaviour
             }
         }
 
-        var shops = database.EnabledShops;
+        // 로그인한 프로필이 있으면 저장된 4종 목록(OP-DEV-05)을 보여준다. 프로필이 없는 미리보기만 기존처럼 전체를 나열한다.
+        IReadOnlyList<ShopRow> shops = database.EnabledShops;
+        if (HasProfile())
+        {
+            var manager = new ShopListManager(profiles, database, null);
+            if (!manager.EnsureList().Ok)
+            {
+                ShowComingSoon("가게 목록");
+                return;
+            }
+
+            var listed = new List<ShopRow>();
+            IReadOnlyList<string> ids = manager.CurrentShopIds;
+            for (int i = 0; i < ids.Count; i++)
+            {
+                ShopRow row;
+                if (database.TryGetShop(ids[i], out row))
+                    listed.Add(row);
+            }
+
+            shops = listed;
+        }
+
         for (int i = 0; i < shops.Count; i++)
             CreateShopCard(shops[i]);
     }
@@ -553,8 +630,14 @@ public class V02AppFlow : MonoBehaviour
         if (database == null || !database.Loaded)
             database = CsvDatabase.LoadFromResources();
 
-        RunState run;
-        if (database == null || !RunState.TryStart(database, shopId, out run))
+        RunState run = null;
+        bool started;
+        if (database != null && HasProfile())
+            started = new ShopListManager(profiles, database, null).StartRun(shopId, out run).Ok; // 목록 소문 스냅샷 + activeRunId
+        else
+            started = database != null && RunState.TryStart(database, shopId, out run);
+
+        if (!started)
         {
             ShowComingSoon("런 시작 실패");
             return;
@@ -593,7 +676,8 @@ public class V02AppFlow : MonoBehaviour
             V02Ui.AddCanvasGroup(runHudScreen);
         }
 
-        runHud.Bind(database, run, ShowLobby);
+        runHud.Bind(database, run, OnRunLobbyRequested, null, null, OnAbandonConfirmed);
+        runHud.SetOperationActions(OnOperationRetry, OnOperationLobby);
         if (runHud.ResultPresentation != null)
         {
             runHud.ResultPresentation.EndedRunContinued.RemoveListener(OnEndedRunContinued);
@@ -604,9 +688,75 @@ public class V02AppFlow : MonoBehaviour
         return true;
     }
 
+    void OnRunLobbyRequested()
+    {
+        ShowLobby();
+    }
+
+    void OnAbandonConfirmed()
+    {
+        RunState run = RunState.Current;
+        if (runHud == null || run == null || run.IsEnded)
+        {
+            if (runHud != null)
+                runHud.AbandonAttemptFailed();
+            return;
+        }
+
+        // 프로필이 없는 미리보기는 저장할 정산이 없다. 확인 뒤에만 기존처럼 로비로 나간다.
+        if (!HasProfile())
+        {
+            runHud.CloseAbandonConfirm();
+            ShowLobby();
+            return;
+        }
+
+        CsvDatabase database = CsvDatabase.Current;
+        if (database == null || !database.Loaded)
+            database = CsvDatabase.LoadFromResources();
+        ShopListResult settled = database == null
+            ? ShopListResult.Of(ShopListOpStatus.DataError)
+            : new ShopListManager(profiles, database, null).AbandonRun(run);
+        if (!settled.Ok)
+        {
+            Debug.LogWarning("[V02] 포기 정산 실패: " + settled.Status);
+            runHud.AbandonAttemptFailed();
+            return;
+        }
+
+        if (runHud.ResultPresentation != null)
+            runHud.ResultPresentation.HideImmediate();
+        runHud.CloseAbandonConfirm();
+        ShowLobby();
+    }
+
+    void OnOperationRetry()
+    {
+        if (HasProfile())
+            ShowOperationPrep();
+        else
+            ShowShopSelect();
+    }
+
+    void OnOperationLobby()
+    {
+        ShowLobby();
+    }
+
     void OnEndedRunContinued()
     {
-        Debug.Log("[V02] 런 종료 피드백 확인. Result 화면은 M1-9에서 연결합니다.");
+        RunState ended = RunState.Current;
+        CsvDatabase database = CsvDatabase.Current;
+        if (ended != null && ended.IsEnded && database != null && HasProfile())
+        {
+            ShopListResult settled = new ShopListManager(profiles, database, null).SettleRun(ended);
+            Debug.Log("[V02] 가게 목록 정산: " + settled.Status);
+        }
+    }
+
+    bool HasProfile()
+    {
+        return profiles != null && profiles.CurrentProfile != null;
     }
 
     void ShowComingSoon(string featureName)
@@ -632,6 +782,13 @@ public class V02AppFlow : MonoBehaviour
     {
         if (profile == null || lobbyFade != null)
             return;
+
+        // 강제 종료 후 첫 진입: 남은 activeRunId 만 지운다. 목록/재화는 그대로다 (D-025).
+        if (HasProfile())
+        {
+            RunState live = RunState.Current;
+            new ShopListManager(profiles, CsvDatabase.Current, null).ClearStaleActiveRun(live != null && !live.IsEnded);
+        }
 
         lobbyFade = StartCoroutine(EnterLobbyAfterLogin());
     }
@@ -805,6 +962,7 @@ public class V02AppFlow : MonoBehaviour
         ApplyVisible(titleScreen, screen == titleScreen);
         ApplyVisible(lobbyScreen, screen == lobbyScreen);
         ApplyVisible(shopScreen, screen == shopScreen);
+        ApplyVisible(prepScreen != null ? prepScreen.Rect : null, prepScreen != null && screen == prepScreen.Rect);
         ApplyVisible(debugScreen, screen == debugScreen);
         ApplyVisible(runHudScreen, screen == runHudScreen);
         if (comingSoon != null && screen != comingSoon)

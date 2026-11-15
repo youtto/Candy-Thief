@@ -231,6 +231,7 @@ public sealed class ActionResolver
 
         ShopRow shop;
         database.TryGetShop(run.ShopID, out shop);
+        shop = run.Shop ?? shop; // 런 시작 스냅샷(소문 반영). 공식은 그대로.
 
         int chance = ComputeSuccessChance(action, shop);
         bool success = chanceRoll.Succeeds(chance);

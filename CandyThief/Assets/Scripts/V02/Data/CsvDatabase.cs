@@ -7,6 +7,7 @@ public sealed class CsvDatabase
 {
     public const string ResourceFolder = "Table";
     public const string LogPrefix = "[CsvDatabase] ";
+    public const int MaxShopNameLength = 10; // D-021: spaces included
 
     static readonly string[] GameplayTables =
     {
@@ -31,7 +32,8 @@ public sealed class CsvDatabase
         "EVENT_ON_FAILED_ACTION",
         "EVENT_CHAIN_ENABLED",
         "MAX_SUCCESS_RATE",
-        "MIN_SUCCESS_RATE"
+        "MIN_SUCCESS_RATE",
+        "ACTION_SELECT_TIME_SEC"
     };
 
     public static CsvDatabase Current { get; private set; }
@@ -47,6 +49,7 @@ public sealed class CsvDatabase
     readonly Dictionary<string, AssetRow> assetsByImageKey = new Dictionary<string, AssetRow>(StringComparer.Ordinal);
     readonly Dictionary<string, EffectRow> effects = new Dictionary<string, EffectRow>(StringComparer.Ordinal);
     readonly Dictionary<string, ResultFeedbackRow> resultFeedbackByKey = new Dictionary<string, ResultFeedbackRow>(StringComparer.Ordinal);
+    readonly Dictionary<string, string> feedbackImageKeyOwner = new Dictionary<string, string>(StringComparer.Ordinal);
 
     readonly List<ShopRow> shopsOrdered = new List<ShopRow>();
     readonly List<PhaseRow> phasesOrdered = new List<PhaseRow>();
@@ -57,6 +60,16 @@ public sealed class CsvDatabase
     readonly List<AssetRow> assetsOrdered = new List<AssetRow>();
     readonly List<EffectRow> effectsOrdered = new List<EffectRow>();
     readonly List<ResultFeedbackRow> resultFeedbackOrdered = new List<ResultFeedbackRow>();
+
+    // D-026 소문 테이블 (선택 로드). 후보 행은 FK 검증 통과분만 candidatesByShop에 들어간다.
+    readonly Dictionary<string, ShopRumorRow> rumors = new Dictionary<string, ShopRumorRow>(StringComparer.Ordinal);
+    readonly List<ShopRumorRow> rumorsOrdered = new List<ShopRumorRow>();
+    readonly List<ShopRumorCandidateRow> rumorCandidatesRaw = new List<ShopRumorCandidateRow>();
+    readonly Dictionary<string, List<ShopRumorCandidateRow>> rumorCandidatesByShop = new Dictionary<string, List<ShopRumorCandidateRow>>(StringComparer.Ordinal);
+    readonly HashSet<string> rumorCandidatePairs = new HashSet<string>(StringComparer.Ordinal);
+    readonly HashSet<string> allRumorIds = new HashSet<string>(StringComparer.Ordinal);
+    static readonly IReadOnlyList<ShopRumorCandidateRow> NoRumorCandidates = new List<ShopRumorCandidateRow>();
+    const int MaxRumorsPerShopForValidation = 2;
 
     readonly HashSet<string> allShopIds = new HashSet<string>(StringComparer.Ordinal);
     readonly HashSet<string> allPhaseIds = new HashSet<string>(StringComparer.Ordinal);
@@ -82,6 +95,32 @@ public sealed class CsvDatabase
     public IReadOnlyList<AssetRow> EnabledAssets => assetsOrdered;
     public IReadOnlyList<EffectRow> EnabledEffects => effectsOrdered;
     public IReadOnlyList<ResultFeedbackRow> EnabledResultFeedback => resultFeedbackOrdered;
+    public IReadOnlyList<ShopRumorRow> EnabledRumors => rumorsOrdered;
+
+    public bool TryGetRumor(string rumorId, out ShopRumorRow row)
+    {
+        row = null;
+        return !string.IsNullOrEmpty(rumorId) && rumors.TryGetValue(rumorId, out row);
+    }
+
+    public IReadOnlyList<ShopRumorCandidateRow> GetRumorCandidates(string shopId)
+    {
+        List<ShopRumorCandidateRow> list;
+        if (!string.IsNullOrEmpty(shopId) && rumorCandidatesByShop.TryGetValue(shopId, out list))
+            return list;
+
+        return NoRumorCandidates;
+    }
+
+    public bool IsRumorCandidate(string shopId, string rumorId)
+    {
+        return rumorCandidatePairs.Contains(RumorPairKey(shopId, rumorId));
+    }
+
+    static string RumorPairKey(string shopId, string rumorId)
+    {
+        return shopId + "|" + rumorId;
+    }
 
     public static CsvDatabase LoadFromResources()
     {
@@ -97,6 +136,7 @@ public sealed class CsvDatabase
 
         database.ParseLoadedTexts(texts);
         database.TryLoadPresentationTableFromResources();
+        database.TryLoadRumorTablesFromResources();
         Current = database;
         return database;
     }
@@ -115,6 +155,15 @@ public sealed class CsvDatabase
         string feedbackText;
         if (tableTexts != null && tableTexts.TryGetValue("ResultFeedbackTable", out feedbackText))
             database.LoadPresentationTableText(feedbackText);
+        string rumorText = null;
+        string rumorCandidateText = null;
+        if (tableTexts != null)
+        {
+            tableTexts.TryGetValue("ShopRumorTable", out rumorText);
+            tableTexts.TryGetValue("ShopRumorCandidate", out rumorCandidateText);
+        }
+
+        database.LoadRumorTableTexts(rumorText, rumorCandidateText);
         return database;
     }
 
@@ -263,6 +312,7 @@ public sealed class CsvDatabase
 
         ValidateReferences();
         ValidateRequiredConfigKeys();
+        ValidateActionSelectTime();
         Loaded = true;
 
         if (HasErrors)
@@ -309,6 +359,12 @@ public sealed class CsvDatabase
                 break;
             case "ResultFeedbackTable":
                 LoadResultFeedback(sheet);
+                break;
+            case "ShopRumorTable":
+                LoadRumors(sheet);
+                break;
+            case "ShopRumorCandidate":
+                LoadRumorCandidates(sheet);
                 break;
             default:
                 Error("{0}은(는) 게임플레이 테이블이 아닙니다.", sheet.TableName);
@@ -414,7 +470,8 @@ public sealed class CsvDatabase
         {
             "ShopID", "ShopName", "Difficulty", "StartTurn", "StartAlert",
             "SuccessRateBonusPp", "CandyMultiplier", "EventRateBonusPp",
-            "AllowedEventTags", "BackgroundImageKey", "UnlockCondition", "Enabled"
+            "AllowedEventTags", "BackgroundImageKey", "UnlockCondition", "Enabled",
+            "SpawnWeight", "DistanceGrade", "ScaleGrade", "SecurityGrade", "GoodsGrade", "EnergyCost"
         };
         if (!sheet.RequireColumns(required))
         {
@@ -456,10 +513,14 @@ public sealed class CsvDatabase
     bool TryBuildShop(CsvSheet sheet, string[] record, int line, string id, out ShopRow row)
     {
         row = null;
-        int difficulty, startTurn, startAlert, successBonus, eventBonus;
+        int difficulty, startTurn, startAlert, successBonus, eventBonus, spawnWeight, energyCost;
         float candyMultiplier;
         bool enabled;
         ConditionKey unlock;
+        DistanceGrade distance;
+        ScaleGrade scale;
+        SecurityGrade security;
+        GoodsGrade goods;
         if (!TryParseInt(sheet, record, line, "Difficulty", out difficulty)
             || !TryParseInt(sheet, record, line, "StartTurn", out startTurn)
             || !TryParseInt(sheet, record, line, "StartAlert", out startAlert)
@@ -467,13 +528,27 @@ public sealed class CsvDatabase
             || !TryParseFloat(sheet, record, line, "CandyMultiplier", out candyMultiplier)
             || !TryParseInt(sheet, record, line, "EventRateBonusPp", out eventBonus)
             || !TryParseEnum(sheet, record, line, "UnlockCondition", out unlock)
-            || !TryParseBool(sheet, record, line, "Enabled", out enabled))
+            || !TryParseBool(sheet, record, line, "Enabled", out enabled)
+            || !TryParseNonNegativeInt(sheet, record, line, "SpawnWeight", out spawnWeight)
+            || !TryParseNonNegativeInt(sheet, record, line, "EnergyCost", out energyCost)
+            || !TryParseGrade(sheet, record, line, "DistanceGrade", out distance)
+            || !TryParseGrade(sheet, record, line, "ScaleGrade", out scale)
+            || !TryParseGrade(sheet, record, line, "SecurityGrade", out security)
+            || !TryParseGrade(sheet, record, line, "GoodsGrade", out goods))
             return false;
+
+        string shopName = sheet.Get(record, "ShopName");
+        if (shopName.Length > MaxShopNameLength)
+        {
+            Error("{0} {1}행: ShopName '{2}' 는 공백 포함 {3}자를 넘습니다. ({4}자)",
+                sheet.TableName, line, shopName, MaxShopNameLength, shopName.Length);
+            return false;
+        }
 
         row = new ShopRow
         {
             ShopID = id,
-            ShopName = sheet.Get(record, "ShopName"),
+            ShopName = shopName,
             Difficulty = difficulty,
             StartTurn = startTurn,
             StartAlert = startAlert,
@@ -484,6 +559,12 @@ public sealed class CsvDatabase
             BackgroundImageKey = sheet.Get(record, "BackgroundImageKey"),
             UnlockCondition = unlock,
             Enabled = enabled,
+            SpawnWeight = spawnWeight,
+            DistanceGrade = distance,
+            ScaleGrade = scale,
+            SecurityGrade = security,
+            GoodsGrade = goods,
+            EnergyCost = energyCost,
             Notes = sheet.Get(record, "Notes")
         };
         return true;
@@ -494,7 +575,8 @@ public sealed class CsvDatabase
         string[] required =
         {
             "PhaseID", "PhaseName", "PhaseOrder", "IsRequired",
-            "EntryCondition", "CompleteCondition", "NextPhaseID", "AllowOptionalActions"
+            "EntryCondition", "CompleteCondition", "NextPhaseID", "AllowOptionalActions",
+            "SituationText"
         };
         if (!sheet.RequireColumns(required))
         {
@@ -531,6 +613,7 @@ public sealed class CsvDatabase
                 CompleteCondition = complete,
                 NextPhaseID = sheet.Get(record, "NextPhaseID"),
                 AllowOptionalActions = allowOptional,
+                SituationText = sheet.Get(record, "SituationText"),
                 Notes = sheet.Get(record, "Notes")
             };
             phases.Add(id, row);
@@ -548,7 +631,8 @@ public sealed class CsvDatabase
             "ActionID", "PhaseID", "ActionType", "ActionName", "Description",
             "SuccessRate", "TurnCost", "FailAlert", "SuccessCandy", "SuccessAlert",
             "FailCandy", "SuccessTurnDelta", "FailTurnDelta", "Repeatable",
-            "ShowCondition", "SuccessNextPhase", "EventEligible", "Enabled"
+            "ShowCondition", "SuccessNextPhase", "EventEligible", "Enabled",
+            "ActionStance", "SpawnWeight", "ImageKey", "SuccessCandyMin", "SuccessCandyMax"
         };
         if (!sheet.RequireColumns(required))
         {
@@ -568,10 +652,13 @@ public sealed class CsvDatabase
                 continue;
 
             ActionType actionType;
+            ActionStance stance;
             ConditionKey showCondition;
             int successRate, turnCost, failAlert, successCandy, successAlert, failCandy, successTurnDelta, failTurnDelta;
+            int spawnWeight, successCandyMin, successCandyMax;
             bool repeatable, eventEligible, enabledFlag;
             if (!TryParseEnum(sheet, record, line, "ActionType", out actionType)
+                || !TryParseEnum(sheet, record, line, "ActionStance", out stance)
                 || !TryParseInt(sheet, record, line, "SuccessRate", out successRate)
                 || !TryParseInt(sheet, record, line, "TurnCost", out turnCost)
                 || !TryParseInt(sheet, record, line, "FailAlert", out failAlert)
@@ -583,8 +670,17 @@ public sealed class CsvDatabase
                 || !TryParseBool(sheet, record, line, "Repeatable", out repeatable)
                 || !TryParseEnum(sheet, record, line, "ShowCondition", out showCondition)
                 || !TryParseBool(sheet, record, line, "EventEligible", out eventEligible)
-                || !TryParseBool(sheet, record, line, "Enabled", out enabledFlag))
+                || !TryParseBool(sheet, record, line, "Enabled", out enabledFlag)
+                || !TryParseNonNegativeInt(sheet, record, line, "SpawnWeight", out spawnWeight)
+                || !TryParseNonNegativeInt(sheet, record, line, "SuccessCandyMin", out successCandyMin)
+                || !TryParseNonNegativeInt(sheet, record, line, "SuccessCandyMax", out successCandyMax))
                 continue;
+
+            if (successCandyMin > successCandyMax)
+            {
+                Error("{0} {1}행: SuccessCandyMin={2} 이 SuccessCandyMax={3} 보다 큽니다.", sheet.TableName, line, successCandyMin, successCandyMax);
+                continue;
+            }
 
             var row = new ActionRow
             {
@@ -606,7 +702,12 @@ public sealed class CsvDatabase
                 SuccessNextPhase = sheet.Get(record, "SuccessNextPhase"),
                 EventEligible = eventEligible,
                 Enabled = enabledFlag,
-                Notes = sheet.Get(record, "Notes")
+                Notes = sheet.Get(record, "Notes"),
+                ActionStance = stance,
+                SpawnWeight = spawnWeight,
+                ImageKey = sheet.Get(record, "ImageKey"),
+                SuccessCandyMin = successCandyMin,
+                SuccessCandyMax = successCandyMax
             };
             parsed++;
             if (!row.Enabled)
@@ -988,6 +1089,24 @@ public sealed class CsvDatabase
         LoadResultFeedback(sheet);
     }
 
+    void NoteFeedbackImageKey(string feedbackId, string branch, string imageKey)
+    {
+        if (string.IsNullOrEmpty(imageKey))
+            return;
+
+        string owner = feedbackId + ":" + branch;
+        string previous;
+        if (feedbackImageKeyOwner.TryGetValue(imageKey, out previous))
+        {
+            Error("ResultFeedbackTable: 이미지 키 '{0}' 가 {1} 와 {2} 에 동시에 있습니다. 결과 분기는 키를 공유하지 않습니다.", imageKey, previous, owner);
+            return;
+        }
+
+        feedbackImageKeyOwner.Add(imageKey, owner);
+        if (!allImageKeys.Contains(imageKey))
+            Warn("ResultFeedbackTable: 이미지 키 '{0}' 가 AssetTable에 없습니다. 임시 피드백을 사용합니다. ({1})", imageKey, owner);
+    }
+
     void LoadResultFeedback(CsvSheet sheet)
     {
         string[] required =
@@ -1052,6 +1171,8 @@ public sealed class CsvDatabase
                 FailText = sheet.Get(record, "FailText"),
                 SuccessPresentationID = sheet.Get(record, "SuccessPresentationID"),
                 FailPresentationID = sheet.Get(record, "FailPresentationID"),
+                SuccessImageKey = sheet.Get(record, "SuccessImageKey"),
+                FailImageKey = sheet.Get(record, "FailImageKey"),
                 Enabled = enabledFlag,
                 Notes = sheet.Get(record, "Notes")
             };
@@ -1076,10 +1197,218 @@ public sealed class CsvDatabase
 
             resultFeedbackByKey.Add(key, row);
             resultFeedbackOrdered.Add(row);
+            NoteFeedbackImageKey(id, "success", row.SuccessImageKey);
+            NoteFeedbackImageKey(id, "fail", row.FailImageKey);
             enabled++;
         }
 
         Info("{0} 로딩: 파싱 {1}행, 활성 {2}행, 비활성 건너뜀 {3}행", sheet.TableName, parsed, enabled, skipped);
+    }
+
+    void TryLoadRumorTablesFromResources()
+    {
+        TextAsset rumorAsset = Resources.Load<TextAsset>(ResourceFolder + "/ShopRumorTable");
+        TextAsset candidateAsset = Resources.Load<TextAsset>(ResourceFolder + "/ShopRumorCandidate");
+        LoadRumorTableTexts(
+            rumorAsset != null ? CsvReader.DecodeUtf8(rumorAsset.bytes) : null,
+            candidateAsset != null ? CsvReader.DecodeUtf8(candidateAsset.bytes) : null);
+    }
+
+    // null 텍스트 = 파일 없음(소문 없음으로 동작). 파일이 있으면 오류는 HasErrors로 반영한다.
+    void LoadRumorTableTexts(string rumorCsv, string candidateCsv)
+    {
+        if (rumorCsv == null && candidateCsv == null)
+        {
+            Info("ShopRumorTable/ShopRumorCandidate가 없어 소문 없이 동작합니다.");
+            return;
+        }
+
+        CsvSheet sheet;
+        if (rumorCsv != null && TryReadSheet("ShopRumorTable", rumorCsv, out sheet))
+            LoadRumors(sheet);
+        if (candidateCsv != null && TryReadSheet("ShopRumorCandidate", candidateCsv, out sheet))
+            LoadRumorCandidates(sheet);
+
+        ValidateRumorReferences();
+    }
+
+    void LoadRumors(CsvSheet sheet)
+    {
+        string[] required =
+        {
+            "RumorID", "RumorName", "RumorText", "HintText", "ConflictGroup",
+            "SuccessRateBonusPp", "AlertDelta", "CandyMultiplierDelta", "EventRateBonusPp", "Enabled"
+        };
+        if (!sheet.RequireColumns(required))
+        {
+            ErrorMissingColumns(sheet, required);
+            return;
+        }
+
+        int parsed = 0;
+        int enabledCount = 0;
+        for (int i = 0; i < sheet.Rows.Count; i++)
+        {
+            string[] record = sheet.Rows[i];
+            int line = i + 2;
+            string id;
+            if (!TryReadUniqueId(sheet, record, line, "RumorID", allRumorIds, out id))
+                continue;
+
+            int successBonus, alertDelta, eventBonus;
+            float multiplierDelta;
+            bool enabled;
+            if (!TryParseInt(sheet, record, line, "SuccessRateBonusPp", out successBonus)
+                || !TryParseInt(sheet, record, line, "AlertDelta", out alertDelta)
+                || !TryParseFloat(sheet, record, line, "CandyMultiplierDelta", out multiplierDelta)
+                || !TryParseInt(sheet, record, line, "EventRateBonusPp", out eventBonus)
+                || !TryParseBool(sheet, record, line, "Enabled", out enabled))
+                continue;
+
+            if (float.IsNaN(multiplierDelta) || float.IsInfinity(multiplierDelta))
+            {
+                Error("{0} {1}행: CandyMultiplierDelta 는 유한한 수여야 합니다.", sheet.TableName, line);
+                continue;
+            }
+
+            string rumorText = sheet.Get(record, "RumorText");
+            string hintText = sheet.Get(record, "HintText");
+            if (string.IsNullOrEmpty(rumorText) || string.IsNullOrEmpty(hintText))
+            {
+                Error("{0} {1}행: RumorText/HintText 는 비어 있을 수 없습니다. ({2})", sheet.TableName, line, id);
+                continue;
+            }
+
+            // 효과가 하나도 없는 활성 소문은 문구와 실제 효과가 어긋나므로 허용하지 않는다.
+            if (enabled && successBonus == 0 && alertDelta == 0 && eventBonus == 0 && Mathf.Approximately(multiplierDelta, 0f))
+            {
+                Error("{0} {1}행: 활성 소문 {2} 의 효과가 모두 0 입니다.", sheet.TableName, line, id);
+                continue;
+            }
+
+            parsed++;
+            if (!enabled)
+            {
+                Info("{0} {1}행: Enabled=0 이므로 건너뜀 ({2})", sheet.TableName, line, id);
+                continue;
+            }
+
+            var row = new ShopRumorRow
+            {
+                RumorID = id,
+                RumorName = sheet.Get(record, "RumorName"),
+                RumorText = rumorText,
+                HintText = hintText,
+                ConflictGroup = sheet.Get(record, "ConflictGroup"),
+                SuccessRateBonusPp = successBonus,
+                AlertDelta = alertDelta,
+                CandyMultiplierDelta = multiplierDelta,
+                EventRateBonusPp = eventBonus,
+                Enabled = true,
+                Notes = sheet.Get(record, "Notes")
+            };
+            rumors.Add(id, row);
+            rumorsOrdered.Add(row);
+            enabledCount++;
+        }
+
+        Info("{0} 로딩: 파싱 {1}행, 활성 {2}행", sheet.TableName, parsed, enabledCount);
+    }
+
+    void LoadRumorCandidates(CsvSheet sheet)
+    {
+        string[] required = { "ShopID", "RumorID", "Weight" };
+        if (!sheet.RequireColumns(required))
+        {
+            ErrorMissingColumns(sheet, required);
+            return;
+        }
+
+        var seenPairs = new HashSet<string>(StringComparer.Ordinal);
+        for (int i = 0; i < sheet.Rows.Count; i++)
+        {
+            string[] record = sheet.Rows[i];
+            int line = i + 2;
+            string shopId = sheet.Get(record, "ShopID");
+            string rumorId = sheet.Get(record, "RumorID");
+            if (string.IsNullOrEmpty(shopId) || string.IsNullOrEmpty(rumorId))
+            {
+                Error("{0} {1}행: ShopID/RumorID 는 비어 있을 수 없습니다.", sheet.TableName, line);
+                continue;
+            }
+
+            if (!seenPairs.Add(RumorPairKey(shopId, rumorId)))
+            {
+                Error("{0} {1}행: (ShopID, RumorID) 중복 '{2}' '{3}'", sheet.TableName, line, shopId, rumorId);
+                continue;
+            }
+
+            int weight;
+            if (!TryParseNonNegativeInt(sheet, record, line, "Weight", out weight))
+                continue;
+
+            rumorCandidatesRaw.Add(new ShopRumorCandidateRow { ShopID = shopId, RumorID = rumorId, Weight = weight });
+        }
+
+        Info("{0} 로딩: {1}행", sheet.TableName, rumorCandidatesRaw.Count);
+    }
+
+    // FK 검증 + 가게별 후보 색인 + 최악 조합에서도 CandyMultiplier > 0 인지 확인한다.
+    void ValidateRumorReferences()
+    {
+        for (int i = 0; i < rumorCandidatesRaw.Count; i++)
+        {
+            ShopRumorCandidateRow row = rumorCandidatesRaw[i];
+            bool ok = true;
+            if (!allShopIds.Contains(row.ShopID))
+            {
+                Error("ShopRumorCandidate: ShopID '{0}' 가 ShopTable에 없습니다.", row.ShopID);
+                ok = false;
+            }
+
+            if (!allRumorIds.Contains(row.RumorID))
+            {
+                Error("ShopRumorCandidate: RumorID '{0}' 가 ShopRumorTable에 없습니다.", row.RumorID);
+                ok = false;
+            }
+
+            if (!ok)
+                continue;
+
+            List<ShopRumorCandidateRow> list;
+            if (!rumorCandidatesByShop.TryGetValue(row.ShopID, out list))
+            {
+                list = new List<ShopRumorCandidateRow>();
+                rumorCandidatesByShop.Add(row.ShopID, list);
+            }
+
+            list.Add(row);
+            rumorCandidatePairs.Add(RumorPairKey(row.ShopID, row.RumorID));
+        }
+
+        for (int i = 0; i < shopsOrdered.Count; i++)
+        {
+            ShopRow shop = shopsOrdered[i];
+            List<ShopRumorCandidateRow> list;
+            if (!rumorCandidatesByShop.TryGetValue(shop.ShopID, out list))
+                continue;
+
+            var deltas = new List<float>();
+            for (int j = 0; j < list.Count; j++)
+            {
+                ShopRumorRow rumor;
+                if (list[j].Weight > 0 && rumors.TryGetValue(list[j].RumorID, out rumor))
+                    deltas.Add(rumor.CandyMultiplierDelta);
+            }
+
+            deltas.Sort();
+            float worst = shop.CandyMultiplier;
+            for (int j = 0; j < deltas.Count && j < MaxRumorsPerShopForValidation && deltas[j] < 0f; j++)
+                worst += deltas[j];
+
+            if (!(worst > 0f))
+                Error("ShopRumorCandidate: 가게 {0} 에서 소문 최악 조합의 CandyMultiplier={1} 는 0 보다 커야 합니다.", shop.ShopID, worst);
+        }
     }
 
     void ValidateReferences()
@@ -1087,7 +1416,7 @@ public sealed class CsvDatabase
         for (int i = 0; i < shopsOrdered.Count; i++)
         {
             ShopRow shop = shopsOrdered[i];
-            if (!string.IsNullOrEmpty(shop.BackgroundImageKey) && !allImageKeys.Contains(shop.BackgroundImageKey))
+            if (string.IsNullOrEmpty(shop.BackgroundImageKey) || !allImageKeys.Contains(shop.BackgroundImageKey))
                 Error("ShopTable {0}: BackgroundImageKey '{1}' 가 AssetTable.ImageKey에 없습니다.", shop.ShopID, shop.BackgroundImageKey);
         }
 
@@ -1121,6 +1450,8 @@ public sealed class CsvDatabase
             PhaseRow phase = phasesOrdered[i];
             if (!IsNoneOrEmpty(phase.NextPhaseID) && !allPhaseIds.Contains(phase.NextPhaseID))
                 Error("PhaseTable {0}: NextPhaseID '{1}' 가 PhaseTable에 없습니다.", phase.PhaseID, phase.NextPhaseID);
+            if (string.IsNullOrWhiteSpace(phase.SituationText))
+                Error("PhaseTable {0}: SituationText가 비어 있습니다. Notes는 플레이어 문장이 아닙니다.", phase.PhaseID);
         }
     }
 
@@ -1141,6 +1472,17 @@ public sealed class CsvDatabase
             if (!configs.ContainsKey(key))
                 Error("GameConfig에 필수 키 '{0}' 가 없습니다.", key);
         }
+    }
+
+    void ValidateActionSelectTime()
+    {
+        GameConfigRow row;
+        if (!TryGetConfig("ACTION_SELECT_TIME_SEC", out row))
+            return;
+
+        int seconds = GetInt("ACTION_SELECT_TIME_SEC");
+        if (row.ValueType != GameConfigValueType.INT || seconds < 1)
+            Error("GameConfig ACTION_SELECT_TIME_SEC는 1 이상의 INT여야 합니다.");
     }
 
     bool TryReadUniqueId(CsvSheet sheet, string[] record, int line, string column, HashSet<string> seen, out string id)
@@ -1170,6 +1512,31 @@ public sealed class CsvDatabase
         Error("{0} {1}행: {2}='{3}' 는 INT가 아닙니다.", sheet.TableName, line, column, raw);
         value = 0;
         return false;
+    }
+
+    bool TryParseNonNegativeInt(CsvSheet sheet, string[] record, int line, string column, out int value)
+    {
+        if (!TryParseInt(sheet, record, line, column, out value))
+            return false;
+
+        if (value >= 0)
+            return true;
+
+        Error("{0} {1}행: {2}={3} 는 0 이상이어야 합니다.", sheet.TableName, line, column, value);
+        value = 0;
+        return false;
+    }
+
+    // Blank cell = grade not assigned yet (NONE). Any other text must be an exact enum token.
+    bool TryParseGrade<T>(CsvSheet sheet, string[] record, int line, string column, out T value) where T : struct
+    {
+        if (string.IsNullOrEmpty(sheet.Get(record, column)))
+        {
+            value = default;
+            return true;
+        }
+
+        return TryParseEnum(sheet, record, line, column, out value);
     }
 
     bool TryParseFloat(CsvSheet sheet, string[] record, int line, string column, out float value)

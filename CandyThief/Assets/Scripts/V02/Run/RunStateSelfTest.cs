@@ -19,8 +19,8 @@ public static class RunStateSelfTest
         failed += Expect("5 경계도 상한 실패", TestAlertFail(database));
         failed += Expect("6 턴 0 실패", TestNoTurnsFail(database));
         failed += Expect("7 마지막 턴 탈출 승리", TestLastTurnEscapeWin(database));
-        failed += Expect("8 사탕 0 탈출은 승리 불가", TestEscapeWithoutCandy(database));
-        failed += Expect("9 경계도 실패가 탈출 성공보다 우선", TestAlertBeatsEscape(database));
+        failed += Expect("8 사탕 0 탈출은 빈손 탈출", TestEscapeWithoutCandy(database));
+        failed += Expect("9 탈출 성공이 경계도 상한보다 우선", TestEscapeBeatsAlert(database));
         failed += Expect("10 종료 후 상태 변경 방지", TestNoMutateAfterEnd(database));
         failed += Expect("11 재시작 시 초기화", TestRestart(database));
 
@@ -195,12 +195,15 @@ public static class RunStateSelfTest
             return false;
         if (!run.TryApplyAction(escape, true))
             return false;
-        return run.Status == RunStatus.InProgress
+        return run.Status == RunStatus.Failed
+            && run.FailReason == RunFailReason.EmptyEscape
+            && run.Outcome == RunOutcome.EmptyEscape
             && run.Candy == 0
-            && run.CurrentPhase != escape.SuccessNextPhase;
+            && run.SettledCandy == 0
+            && run.CurrentPhase == escape.SuccessNextPhase;
     }
 
-    static bool TestAlertBeatsEscape(CsvDatabase database)
+    static bool TestEscapeBeatsAlert(CsvDatabase database)
     {
         RunState run;
         if (!RunState.TryStart(database, "SHOP_001", out run))
@@ -225,9 +228,11 @@ public static class RunStateSelfTest
         if (!run.TryApplyResolved(resolved))
             return false;
 
-        return run.Status == RunStatus.Failed
-            && run.FailReason == RunFailReason.AlertLimit
-            && run.Alert == maxAlert;
+        return run.Status == RunStatus.Won
+            && run.FailReason == RunFailReason.None
+            && run.Outcome == RunOutcome.OperationSuccess
+            && run.Alert == maxAlert
+            && run.SettledCandy >= minCandy;
     }
 
     static bool TestNoMutateAfterEnd(CsvDatabase database)

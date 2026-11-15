@@ -13,7 +13,27 @@ public enum RunFailReason
 {
     None,
     NoTurns,
-    AlertLimit
+    AlertLimit,
+    Abandon,
+    EmptyEscape
+}
+
+public enum RunOutcome
+{
+    Continue,
+    OperationSuccess,
+    EmptyEscape,
+    Captured,
+    NoTurns
+}
+
+// 표시용 전리품. 지금은 만드는 곳이 없고, 결과 팝업은 빈 목록을 빈 상태로 보여 준다.
+public sealed class RunLootGrant
+{
+    public string ItemId;
+    public string DisplayName;
+    public int Count;
+    public bool Kept;
 }
 
 public enum RunActionResult
@@ -52,10 +72,18 @@ public sealed class RunState
     bool eventCheckConsumed;
 
     public string ShopID { get; private set; }
+
+    // 런 1회당 고유 ID. 결과 정산(가게 목록 갱신)이 같은 런에 대해 두 번 실행되지 않게 하는 키다 (D-025/D-026).
+    public string RunId { get; private set; }
+
+    // 런 시작 시점 가게 스냅샷 (소문 효과 반영 복사본). 판정/HUD는 이 값을 읽고, 원본 ShopRow는 수정하지 않는다.
+    public ShopRow Shop { get; private set; }
+    public IReadOnlyList<string> RumorIds { get; private set; }
     public string CurrentPhase { get; private set; }
     public string PhaseID => CurrentPhase;
     public int RemainingTurns { get; private set; }
     public int Alert { get; private set; }
+    public int AlertMax { get { return maxAlert; } }
     public int Candy { get; private set; }
     public string LastActionID { get; private set; }
     public RunActionResult LastActionResult { get; private set; }
@@ -66,7 +94,46 @@ public sealed class RunState
     public string PendingEventID => pendingEventId ?? string.Empty;
     public bool HasPendingEvent => !string.IsNullOrEmpty(PendingEventID);
 
+    // 행동 한 번이 적용되고 런이 계속될 때 증가한다. HUD 갱신만으로는 바뀌지 않는다.
+    public int ChoiceEpoch { get; private set; }
+
+    public RunOutcome Outcome
+    {
+        get
+        {
+            if (Status == RunStatus.Won)
+                return RunOutcome.OperationSuccess;
+            if (Status != RunStatus.Failed)
+                return RunOutcome.Continue;
+            if (FailReason == RunFailReason.EmptyEscape)
+                return RunOutcome.EmptyEscape;
+            if (FailReason == RunFailReason.AlertLimit)
+                return RunOutcome.Captured;
+            if (FailReason == RunFailReason.NoTurns)
+                return RunOutcome.NoTurns;
+            return RunOutcome.Continue;
+        }
+    }
+
+    // 프로필에 넣는 사탕. 작전 성공만 배율을 올리고, 그 외에는 0이다.
+    public int SettledCandy
+    {
+        get
+        {
+            if (Status != RunStatus.Won)
+                return 0;
+            float multiplier = Shop != null ? Shop.CandyMultiplier : 1f;
+            return Mathf.CeilToInt(Candy * multiplier);
+        }
+    }
+
     public static bool TryStart(CsvDatabase database, string shopId, out RunState state)
+    {
+        return TryStart(database, shopId, null, out state);
+    }
+
+    // rumorIds: 가게 목록 확정 시 뽑아 둔 소문 (OP-DEV-04). null/빈 목록이면 기존 동작과 동일하다.
+    public static bool TryStart(CsvDatabase database, string shopId, IReadOnlyList<string> rumorIds, out RunState state)
     {
         state = null;
         if (database == null || !database.Loaded || database.HasErrors)
@@ -105,16 +172,27 @@ public sealed class RunState
             return false;
         }
 
+        ShopRow snapshot;
+        string snapshotError;
+        if (!ShopRumorSnapshot.TryBuild(database, shop, rumorIds, out snapshot, out snapshotError))
+        {
+            Debug.LogError(LogPrefix + "소문 스냅샷을 만들 수 없어 런을 시작하지 않습니다: " + snapshotError);
+            return false;
+        }
+
         state = new RunState
         {
+            RunId = Guid.NewGuid().ToString("N"),
+            Shop = snapshot,
+            RumorIds = rumorIds == null ? new List<string>() : new List<string>(rumorIds),
             database = database,
             maxAlert = database.GetInt("MAX_ALERT"),
             minCandyToEscape = database.GetInt("MIN_CANDY_TO_ESCAPE"),
             escapePhaseId = escapePhaseId,
             ShopID = shop.ShopID,
             CurrentPhase = opening.PhaseID,
-            RemainingTurns = shop.StartTurn,
-            Alert = ClampNonNegative(shop.StartAlert),
+            RemainingTurns = snapshot.StartTurn,
+            Alert = ClampNonNegative(snapshot.StartAlert),
             Candy = 0,
             LastActionID = string.Empty,
             LastActionResult = RunActionResult.None,
@@ -213,6 +291,43 @@ public sealed class RunState
         return true;
     }
 
+    // LOOT의 다음 페이즈로 들어간다. 턴·위험도·사탕·행동 기록은 바꾸지 않는다.
+    public bool TryPrepareEscape()
+    {
+        if (!EnsureInProgress("탈출 준비"))
+            return false;
+
+        if (HasPendingEvent)
+        {
+            Debug.LogError(LogPrefix + "이벤트 선택 중에는 탈출을 준비할 수 없습니다. pending=" + PendingEventID);
+            return false;
+        }
+
+        if (database == null)
+            return false;
+
+        PhaseRow current;
+        PhaseRow destination;
+        if (!database.TryGetPhase(CurrentPhase, out current)
+            || string.IsNullOrEmpty(current.NextPhaseID)
+            || current.NextPhaseID != escapePhaseId
+            || !database.TryGetPhase(escapePhaseId, out destination))
+        {
+            Debug.LogError(LogPrefix + "지금은 탈출을 준비할 수 없습니다. phase=" + CurrentPhase);
+            return false;
+        }
+
+        if (!MeetsPhaseCondition(current.CompleteCondition) || !MeetsPhaseCondition(destination.EntryCondition))
+        {
+            Debug.LogError(LogPrefix + "탈출 준비 조건을 만족하지 않습니다. complete="
+                + current.CompleteCondition + " entry=" + destination.EntryCondition + " candy=" + Candy);
+            return false;
+        }
+
+        CurrentPhase = destination.PhaseID;
+        return true;
+    }
+
     public bool SetPhase(string phaseId)
     {
         if (!EnsureInProgress("페이즈"))
@@ -302,15 +417,15 @@ public sealed class RunState
             successfulActionIds.Add(LastActionID);
 
         EvaluateEndConditions(resolved.Success && resolved.IsEscapeAction);
-        if (Status == RunStatus.Won && ShouldAdvancePhase(resolved))
+        bool ended = Status != RunStatus.InProgress;
+        if (resolved.Success && ShouldAdvancePhase(resolved)
+            && (!ended || Status == RunStatus.Won || FailReason == RunFailReason.EmptyEscape))
             CurrentPhase = resolved.SuccessNextPhase;
 
-        if (Status != RunStatus.InProgress)
+        if (ended)
             return true;
 
-        if (resolved.Success && ShouldAdvancePhase(resolved))
-            CurrentPhase = resolved.SuccessNextPhase;
-
+        ChoiceEpoch++;
         return true;
     }
 
@@ -370,13 +485,25 @@ public sealed class RunState
             + " LastResult=" + LastActionResult);
     }
 
+    bool MeetsPhaseCondition(ConditionKey key)
+    {
+        switch (key)
+        {
+            case ConditionKey.ALWAYS:
+            case ConditionKey.NONE:
+                return true;
+            case ConditionKey.CANDY_AT_LEAST_1:
+                return Candy >= minCandyToEscape;
+            default:
+                Debug.LogError(LogPrefix + "탈출 준비에서 지원하지 않는 조건입니다. condition=" + key);
+                return false;
+        }
+    }
+
     bool ShouldAdvancePhase(ResolvedAction resolved)
     {
         if (string.IsNullOrEmpty(resolved.SuccessNextPhase)
             || string.Equals(resolved.SuccessNextPhase, "NONE", System.StringComparison.Ordinal))
-            return false;
-
-        if (resolved.IsEscapeAction && Candy < minCandyToEscape)
             return false;
 
         return true;
@@ -387,19 +514,29 @@ public sealed class RunState
         if (Status != RunStatus.InProgress)
             return;
 
+        if (escapeSucceeded)
+        {
+            if (Candy >= minCandyToEscape)
+            {
+                Status = RunStatus.Won;
+                FailReason = RunFailReason.None;
+                Debug.Log(LogPrefix + "작전 성공: 탈출 성공, Candy=" + Candy);
+            }
+            else
+            {
+                Status = RunStatus.Failed;
+                FailReason = RunFailReason.EmptyEscape;
+                Debug.Log(LogPrefix + "빈손 탈출: Candy=0");
+            }
+
+            return;
+        }
+
         if (Alert >= maxAlert)
         {
             Status = RunStatus.Failed;
             FailReason = RunFailReason.AlertLimit;
-            Debug.Log(LogPrefix + "실패: 경계도 " + Alert + " >= MAX_ALERT " + maxAlert);
-            return;
-        }
-
-        if (escapeSucceeded && Candy >= minCandyToEscape)
-        {
-            Status = RunStatus.Won;
-            FailReason = RunFailReason.None;
-            Debug.Log(LogPrefix + "승리: 탈출 성공, Candy=" + Candy + " Turns=" + RemainingTurns);
+            Debug.Log(LogPrefix + "체포: 경계도 " + Alert + " >= MAX_ALERT " + maxAlert);
             return;
         }
 
@@ -407,8 +544,31 @@ public sealed class RunState
         {
             Status = RunStatus.Failed;
             FailReason = RunFailReason.NoTurns;
-            Debug.Log(LogPrefix + "실패: 남은 턴 0");
+            Debug.Log(LogPrefix + "탈출 실패: 남은 턴 0");
         }
+    }
+
+    // 명시적 포기 (D-025). 턴, 위험도, 사탕, 행동 기록은 바꾸지 않는다.
+    public bool TryAbandon()
+    {
+        if (IsEnded)
+            return false;
+
+        Status = RunStatus.Failed;
+        FailReason = RunFailReason.Abandon;
+        Debug.Log(LogPrefix + "포기: RunId=" + RunId);
+        return true;
+    }
+
+    // 포기 정산이 저장되지 않았을 때만 진행 중으로 되돌린다.
+    public bool RevertAbandon()
+    {
+        if (Status != RunStatus.Failed || FailReason != RunFailReason.Abandon)
+            return false;
+
+        Status = RunStatus.InProgress;
+        FailReason = RunFailReason.None;
+        return true;
     }
 
     bool EnsureInProgress(string field)

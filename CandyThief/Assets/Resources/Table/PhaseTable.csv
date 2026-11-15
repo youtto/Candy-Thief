@@ -1,6 +1,6 @@
-﻿PhaseID,PhaseName,PhaseOrder,IsRequired,EntryCondition,CompleteCondition,NextPhaseID,AllowOptionalActions,Notes
-MOVE,이동,1,1,ALWAYS,REQUIRED_ACTION_SUCCESS,INFILTRATE,1,이동 성공 시 잠입
-INFILTRATE,잠입,2,1,MOVE_COMPLETED,REQUIRED_ACTION_SUCCESS,LOOT,1,잠입 실패 시 재시도
-LOOT,사탕 훔치기,3,1,INFILTRATE_COMPLETED,CANDY_AT_LEAST_1,ESCAPE,1,사탕을 획득한 후 추가 털이 또는 탈출 선택 가능
-ESCAPE,탈출,4,1,CANDY_AT_LEAST_1,REQUIRED_ACTION_SUCCESS,RESULT,0,탈출 성공 시 승리
-RESULT,결과,5,1,GAME_ENDED,ALWAYS,NONE,0,정산 화면
+﻿PhaseID,PhaseName,PhaseOrder,IsRequired,EntryCondition,CompleteCondition,NextPhaseID,AllowOptionalActions,SituationText,Notes
+MOVE,이동,1,1,ALWAYS,REQUIRED_ACTION_SUCCESS,INFILTRATE,1,가게로 가는 길 위다.,이동 성공 시 잠입
+INFILTRATE,잠입,2,1,MOVE_COMPLETED,REQUIRED_ACTION_SUCCESS,LOOT,1,가게 안으로 들어갈 곳을 고른다.,잠입 실패 시 재시도
+LOOT,사탕 훔치기,3,1,INFILTRATE_COMPLETED,ALWAYS,ESCAPE,1,사탕을 얼마나 가져갈지 정한다.,사탕이 없어도 탈출 준비로 ESCAPE에 들어간다
+ESCAPE,탈출,4,1,ALWAYS,REQUIRED_ACTION_SUCCESS,RESULT,0,빠져나갈 길을 고른다.,진입에 사탕 조건 없음. 승리 판정은 MIN_CANDY_TO_ESCAPE
+RESULT,결과,5,1,GAME_ENDED,ALWAYS,NONE,0,작전이 끝났다.,정산 화면

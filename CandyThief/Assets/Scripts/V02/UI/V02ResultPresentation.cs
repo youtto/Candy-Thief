@@ -16,6 +16,8 @@ public sealed class PresentedResolve
     public bool RunEnded;
     public RunStatus Status;
     public RunFailReason FailReason;
+    // null이면 기존 임시 프레임. 값이 있으면 예상·공개가 같은 전용 스프라이트.
+    public Sprite DedicatedReaction;
 }
 
 public sealed class V02ResultPresentation : MonoBehaviour
@@ -262,11 +264,10 @@ public sealed class V02ResultPresentation : MonoBehaviour
         {
             reactionImage.enabled = true;
             reactionImage.preserveAspect = true;
-            reactionImage.sprite = UseCapturedReaction() ? capturedSprite : FrameAt(failFrames, 0);
-            if (reactionImage.sprite == null)
-                reactionImage.sprite = FrameAt(successFrames, 0);
+            bool dedicated = current != null && current.DedicatedReaction != null;
+            reactionImage.sprite = SelectReactionSprite(true, current != null && current.Success);
             reactionImage.color = new Color(1f, 1f, 1f, 0.35f);
-            ApplyReactionLayout(UseCapturedReaction() && reactionImage.sprite == capturedSprite);
+            ApplyReactionLayout(!dedicated && UseCapturedReaction() && reactionImage.sprite == capturedSprite);
         }
 
         float waited = 0f;
@@ -305,18 +306,6 @@ public sealed class V02ResultPresentation : MonoBehaviour
     void ApplyPresentation(string presentationId, bool success, string body)
     {
         string title = success ? "성공!" : "실패…";
-        if (current != null && current.RunEnded)
-        {
-            if (current.Status == RunStatus.Won)
-                title = "성공! · 승리";
-            else if (current.FailReason == RunFailReason.AlertLimit)
-                title = "들켰다!";
-            else if (current.FailReason == RunFailReason.NoTurns)
-                title = "실패… · 턴";
-            else
-                title = "실패… · 종료";
-        }
-
         SetText(titleText, title);
         SetText(bodyText, body);
         SetText(deltaText, FormatDeltas(current));
@@ -325,27 +314,19 @@ public sealed class V02ResultPresentation : MonoBehaviour
 
         if (reactionImage != null)
         {
-            bool capture = UseCapturedReaction();
-            if (capture)
-                reactionImage.sprite = capturedSprite;
-            else
-            {
-                Sprite[] frames = success ? successFrames : failFrames;
-                reactionImage.sprite = FrameAt(frames, frames != null && frames.Length > 1 ? 1 : 0);
-            }
-
+            bool dedicated = current != null && current.DedicatedReaction != null;
+            bool capture = !dedicated && UseCapturedReaction();
+            reactionImage.sprite = SelectReactionSprite(false, success);
             reactionImage.preserveAspect = true;
             reactionImage.enabled = reactionImage.sprite != null;
             ApplyReactionLayout(capture && reactionImage.sprite == capturedSprite);
         }
 
         if (titleText != null)
-            titleText.color = current != null && current.FailReason == RunFailReason.AlertLimit
-                ? new Color(0.72f, 0.12f, 0.18f)
-                : (success ? new Color(0.22f, 0.45f, 0.28f) : new Color(0.62f, 0.18f, 0.22f));
+            titleText.color = success ? new Color(0.22f, 0.45f, 0.28f) : new Color(0.62f, 0.18f, 0.22f);
 
         ClearFx();
-        bool alertFx = presentationId == FailAlert || presentationId == RunFail || (current != null && current.AlertDelta > 0 && !success);
+        bool alertFx = UsesAlertFx(presentationId, current);
         bool candyFx = current != null && current.CandyDelta > 0;
         if (success)
         {
@@ -393,12 +374,36 @@ public sealed class V02ResultPresentation : MonoBehaviour
             ApplyPresentation(currentPresentationId, current.Success, currentBody);
     }
 
+    public static bool UsesAlertFx(string presentationId, PresentedResolve resolve)
+    {
+        bool success = resolve != null && resolve.Success;
+        return presentationId == FailAlert
+            || presentationId == RunFail
+            || (resolve != null && resolve.AlertDelta > 0 && !success);
+    }
+
+    Sprite SelectReactionSprite(bool anticipate, bool success)
+    {
+        if (current != null && current.DedicatedReaction != null)
+            return current.DedicatedReaction;
+        if (UseCapturedReaction())
+            return capturedSprite;
+        if (anticipate)
+        {
+            Sprite frame = FrameAt(failFrames, 0);
+            if (frame == null)
+                frame = FrameAt(successFrames, 0);
+            return frame;
+        }
+
+        Sprite[] frames = success ? successFrames : failFrames;
+        int index = frames != null && frames.Length > 1 ? 1 : 0;
+        return FrameAt(frames, index);
+    }
+
     bool UseCapturedReaction()
     {
-        return current != null
-            && current.RunEnded
-            && current.FailReason == RunFailReason.AlertLimit
-            && capturedSprite != null;
+        return false;
     }
 
     void StoreDefaultReactionLayout()

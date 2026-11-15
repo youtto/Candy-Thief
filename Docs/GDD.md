@@ -10,6 +10,8 @@ Current gameplay source of truth. Implementation follows this file plus `Docs/DE
 |---|---|---|
 | v0.1 | Superseded | 2D top-down shop stealth. WASD, guard FOV, key/gold candy, WebGL. Archive: [Appendix A](#appendix-a-superseded-v01-spec). |
 | v0.2 | Current | Mobile portrait probability-choice roguelite. Push Your Luck, CSV-driven, Android APK first. |
+| 2026-11-14 | D-021–D-026 | Operation prep, rumors, quests, rerolls. CSV files on disk are unchanged until a later pass. |
+| 2026-11-15 | D-028–D-032 | In-run HUD, escape prep, separate operation result, shared action and event timer. PLAY-01 through PLAY-03 and PLAY-05 through PLAY-07 are reviewed Done. The forecast tooltip stays until the M4 center information modal. |
 
 Change reason is recorded in `Docs/DECISIONS.md` (D-001).
 
@@ -40,16 +42,22 @@ Title → Lobby → Shop Selection → Move → Infiltrate → Loot → Escape �
 
 Lobby is a hub before shop select (D-012). It does not change run rules. Nickname, energy, gold, and candy on the lobby HUD are live saved values (D-020). Unimplemented hub menus still show “준비 중”. Title stays until nickname login succeeds (D-018).
 
-Shop selection happens at run start. Each `ShopTable` row changes:
+Shop selection happens before a run (D-021). `작전 시작` opens a saved list of 4 shops, not every enabled row. One list has no duplicate shop. An active quest does not change draw weights. The list refreshes only after a settled win, fail, or explicit abandon (D-025). Reopening the screen keeps the list. Each chosen `ShopTable` row still changes:
 
 - `StartTurn`, `StartAlert`
 - `SuccessRateBonusPp` (percentage points added to action success)
 - `CandyMultiplier` (applied once to run candy on escape success; see [Candy](#candy))
 - `EventRateBonusPp` and `AllowedEventTags`
 
+Rumors (D-022) are not `EventTable` rows. They are fixed when the list is created, then folded into one shop snapshot at run start (`SuccessRateBonusPp`, `StartAlert`, `CandyMultiplier`, `EventRateBonusPp`). No rumors means the snapshot equals the shop row. Resolve order is unchanged (D-011). `EffectTable` stays off.
+
+Quest board rules are D-023. Reroll caps and the KST 05:00 operation day are D-024. Column names are D-026. Shop columns and the empty rumor tables are on disk (D-027, OP-DEV-04). `QuestTable` is not on disk yet.
+
 Phase order after shop select follows `PhaseTable.PhaseOrder`: MOVE → INFILTRATE → LOOT → ESCAPE → RESULT. In a phase with several `ActionType=REQUIRED` rows, the player picks **one**. One success with `CompleteCondition=REQUIRED_ACTION_SUCCESS` advances via `SuccessNextPhase` / `NextPhaseID`.
 
-LOOT stays in LOOT after a successful steal (`SuccessNextPhase=LOOT`) so the player can steal again (Push Your Luck). `ACT_013` (`OPTIONAL`, `ShowCondition=CANDY_AT_LEAST_1`) moves to ESCAPE after its own success roll. Meeting candy / phase conditions does not auto-succeed. An ESCAPE-phase action must then succeed to win (D-014).
+Action select and event select share one limit, `GameConfig.ACTION_SELECT_TIME_SEC` (30) (D-028, extended by D-031). The countdown runs while action cards or event options are shown. It pauses for the abandon confirm, the escape-prep notice, and the empty-hand confirm; cancel resumes the remaining time. Result feedback and an ended run hide it and stop it. A tooltip does not pause it. At 0 seconds, one `CanExecute` choice is picked with equal probability and resolved through the same action or event path, with no extra turn, alert, or candy penalty. `SpawnWeight` is not that probability. One claim per round, so a click and a timeout cannot both apply. After the claim, the current choices take no further input. Zero executable choices log once and do not auto-pick or add a fail (P-018). A new action round, and the moment event options appear, each start the allowance again. Refreshing the same round does not.
+
+LOOT stays in LOOT after a successful steal (`SuccessNextPhase=LOOT`) so the player can steal again (Push Your Luck). The LOOT `탈출 준비하기` button enters ESCAPE with no turn cost and no success roll (D-029). Candy 0 asks for confirmation first. Candy 1 or more enters immediately. `ACT_013` stays in the table and out of the normal 2-card draw. An ESCAPE-phase action must then succeed to win, and that win still requires candy ≥ `MIN_CANDY_TO_ESCAPE` (D-014). Entering ESCAPE with no candy is not itself a win or a fail.
 
 ## Win / fail
 
@@ -58,20 +66,19 @@ Win (all required):
 - run candy ≥ `GameConfig.MIN_CANDY_TO_ESCAPE`
 - an **escape-phase** action succeeds its chance roll (same formula as other actions; D-014)
 
-Fail (first match in the end-check order below):
+Fail, after an escape-action success is judged (D-030):
 
-- alert ≥ `GameConfig.MAX_ALERT`
-- remaining turns reach 0, except when this same action already produced a win
+- empty-hand escape: the escape action succeeded and candy is 0
+- else alert ≥ `GameConfig.MAX_ALERT` (captured)
+- else remaining turns reach 0 (`NoTurns`)
 
-Owner-approved last-turn and overlap rules (D-011):
+Owner-approved last-turn and overlap rules (D-011, order updated by D-030):
 
 - `TurnCost` > remaining turns: the action cannot be selected.
 - `TurnCost` == remaining turns: the action may be executed.
-- After that action, remaining turns may be 0. If it was a successful escape and run candy ≥ `MIN_CANDY_TO_ESCAPE`, the run **wins**.
-- Last-turn escape **fail** is not a win. Apply the same end-check order (alert first, else remaining turns 0 fail).
-- Otherwise remaining turns 0 is a fail.
-- If this action makes alert ≥ `MAX_ALERT` and also satisfies escape success, **alert fail wins**.
-- Escape success with run candy 0 is not a win.
+- Escape-action success is judged before alert and before 0 turns. Candy ≥ `MIN_CANDY_TO_ESCAPE` is an operation success even if alert is max or turns are now 0.
+- Escape-action success with candy 0 is an empty-hand escape. It is not an operation success and it is not `NoTurns`.
+- A failed escape that reaches both alert max and 0 turns is captured.
 - Candy / ESCAPE phase / last-turn eligibility does not skip the success roll or auto-win (D-014).
 
 End-condition checks beat event spawning. If a resolved action or option already meets win/fail, do not roll or present an event.
@@ -81,14 +88,15 @@ Resolve order (do not reorder in code):
 1. Reject selection if `TurnCost` > remaining turns
 2. Subtract action/option `TurnCost`
 3. Apply success or fail candy / alert / turn deltas (integers; no `CandyMultiplier`)
-4. End check, in this order:
-   1. `Alert >= MAX_ALERT` → fail
-   2. Else escape-action success and candy ≥ `MIN_CANDY_TO_ESCAPE` → win (allowed at 0 turns)
-   3. Else remaining turns ≤ 0 → fail
-   4. Else the run stays live
+4. End check, in this order (D-030):
+   1. Escape-action success and candy ≥ `MIN_CANDY_TO_ESCAPE` → operation success (wins over alert and 0 turns)
+   2. Else escape-action success and candy 0 → empty-hand escape. The escape succeeded and the operation failed. Settled candy is 0
+   3. Else `Alert >= MAX_ALERT` → captured
+   4. Else remaining turns ≤ 0 → `NoTurns`
+   5. Else the run stays live
 5. If the run is still live, event check
 
-`finalReward` is not computed in M1-3. See [Candy](#candy).
+Settled candy is `Ceil(run candy × shop CandyMultiplier)` only for an operation success. Every other ending, including empty-hand escape, settles 0 (D-009, D-030).
 
 ## Actions
 
@@ -103,7 +111,7 @@ Actions are data rows in `ActionTable`, referenced by ID.
 | On success | Add integer `SuccessCandy` to run candy (no per-action multiplier), `SuccessAlert`, `SuccessTurnDelta` |
 | Required failure | Same-phase retry while the run is live, including `Repeatable=0` rows |
 | Repeatable | Post-success reappearance this run, not an attempt count (D-013). `1`: choosable after success or fail. `0`: choosable after fail; not after success. Eligibility ≠ spawn chance. Current ActionTable rows are `1` |
-| Optional | Current table: only `ACT_013` (leave LOOT → ESCAPE when candy ≥ `MIN_CANDY_TO_ESCAPE`). Still uses the success-chance formula; success is a phase change, not a win. Not a skip of MOVE/INFILTRATE |
+| Optional | `ACT_013` remains the only optional row. It is excluded from the normal draw (`SpawnWeight=0`). The player leaves LOOT with the escape-prep button (D-029), not with this card |
 | Escape roll | Stage clear requires a successful ESCAPE-phase roll. Players choose among current rows (`ACT_010`–`ACT_012`) for chance vs turn cost. Do not add extra safer escape rows until rates and unlocks are approved |
 | Event after action | Only if `EventEligible=1`. `ACT_013` is 0 |
 | Display | Show chance, turn cost, expected reward/penalty from data. Do not hardcode |
@@ -140,7 +148,7 @@ Owner-approved. D-009. Do not use floor / truncate.
 | Escape success | `finalReward = CeilToInt(runCandy × Shop.CandyMultiplier)`. Apply the multiplier **once**, not per action |
 | Escape failure, or run fail (turns / alert) | `finalReward = 0` |
 
-`RunState` in M1-3 stores run candy only. `finalReward` is computed in later escape/result work.
+`RunState.SettledCandy` is that `finalReward`. The profile receives it once, and only for an operation success (D-030). Empty-hand escape, capture, `NoTurns`, and abandon grant 0.
 
 ## Score
 
@@ -196,16 +204,17 @@ Condition tokens (`NONE`, `ALWAYS`, `CANDY_AT_LEAST_1`, `REQUIRED_ACTION_SUCCESS
 | `MAX_ALERT` | 100 | Fail if alert ≥ this |
 | `EVENT_TRIGGER_RATE` | 25 | Base event chance % |
 | `MAX_EVENT_PER_ACTION` | 1 | Event cap per action |
-| `MIN_CANDY_TO_ESCAPE` | 1 | Candy needed to escape / win |
+| `MIN_CANDY_TO_ESCAPE` | 1 | Candy needed for an escape-action success to win. Not required to enter ESCAPE (D-029) |
 | `BASE_SCORE_MULTIPLIER` | 1 | TEMP score factor |
 | `EVENT_ON_FAILED_ACTION` | 1 | Roll event after fail |
 | `EVENT_CHAIN_ENABLED` | 0 | No chained events |
 | `MAX_SUCCESS_RATE` | 100 | Chance clamp |
 | `MIN_SUCCESS_RATE` | 0 | Chance clamp |
+| `ACTION_SELECT_TIME_SEC` | 30 | Required INT ≥ 1. Shared action and event select limit in seconds (D-028, D-031) |
 
-**ShopTable** — `ShopID` PK. Current enabled: `SHOP_001` 동네 사탕 가게, `SHOP_002` 대형 캔디숍, `SHOP_003` 비밀 사탕 창고. Columns: `ShopName`, `Difficulty`, `StartTurn`, `StartAlert`, `SuccessRateBonusPp`, `CandyMultiplier`, `EventRateBonusPp`, `AllowedEventTags`, `BackgroundImageKey` → `AssetTable.ImageKey`, `UnlockCondition`, `Enabled`, `Notes`.
+**ShopTable** — `ShopID` PK. On disk today: 20 shops `SHOP_001`–`SHOP_020` (D-027). `SHOP_001` 토마스 사탕점, `SHOP_002` 잭의 과자점, `SHOP_003` 르블랑 백화점 keep their ids and resolve numbers (D-021); `SHOP_004`–`SHOP_020` carry 1st-pass test balance numbers. Columns on disk: `ShopName`, `Difficulty`, `StartTurn`, `StartAlert`, `SuccessRateBonusPp`, `CandyMultiplier`, `EventRateBonusPp`, `AllowedEventTags`, `BackgroundImageKey` → `AssetTable.ImageKey`, `UnlockCondition`, `Enabled`, `SpawnWeight`, `DistanceGrade`, `ScaleGrade`, `SecurityGrade`, `GoodsGrade`, `EnergyCost`, `Notes`. `EnergyCost` is not spent (D-020). `EnergyCost` is `0` on every shop until its values are approved.
 
-**PhaseTable** — `PhaseID` PK: `MOVE`, `INFILTRATE`, `LOOT`, `ESCAPE`, `RESULT`. Columns: `PhaseName`, `PhaseOrder`, `IsRequired`, `EntryCondition`, `CompleteCondition`, `NextPhaseID`, `AllowOptionalActions`, `Notes`.
+**PhaseTable** — `PhaseID` PK: `MOVE`, `INFILTRATE`, `LOOT`, `ESCAPE`, `RESULT`. Columns: `PhaseName`, `PhaseOrder`, `IsRequired`, `EntryCondition`, `CompleteCondition`, `NextPhaseID`, `AllowOptionalActions`, `SituationText`, `Notes`. `SituationText` is the player line under the illustration during action select (D-028). `Notes` stays a developer note and is not shown. A blank `SituationText` fails the load.
 
 **ActionTable** — `ActionID` PK. Columns: `PhaseID`, `ActionType`, `ActionName`, `Description`, `SuccessRate`, `TurnCost`, `FailAlert`, `SuccessCandy`, `SuccessAlert`, `FailCandy`, `SuccessTurnDelta`, `FailTurnDelta`, `Repeatable` (D-013: after success, not attempt count), `ShowCondition`, `SuccessNextPhase`, `EventEligible`, `Enabled`, `Notes`.
 
@@ -219,7 +228,9 @@ Current enabled actions: MOVE `ACT_001`–`ACT_003`; INFILTRATE `ACT_004`–`ACT
 
 **AssetTable** — `AssetID` PK, `ImageKey` unique. `FilePath` is a planned PNG list; files are not created yet. M1 uses placeholders.
 
-**EffectTable** — future. All current rows `Implemented=0` and `Enabled=0`. Runtime must not apply them until implemented. MVP outcomes come from Action/EventOption columns.
+**EffectTable** — future. All current rows `Implemented=0` and `Enabled=0`. Runtime must not apply them until implemented. MVP outcomes come from Action/EventOption columns. Rumors must not turn these rows on (D-022).
+
+**ShopRumorTable / ShopRumorCandidate / QuestTable** — approved in D-026. The two rumor tables are on disk with no rows yet (OP-DEV-04); `QuestTable` is not on disk yet. Rumors modify the shop snapshot only. Quests are not `AchievementTable` rows. In-run events stay `EventTable`.
 
 ## UI
 
@@ -235,15 +246,16 @@ Stack: Unity uGUI + TextMeshPro (already available via `com.unity.ugui`).
 | Touch | Choice buttons large enough for fingers |
 | Reuse | Required-action choices and event options share one choice-list UI |
 
-Screen layout:
+Screen layout (D-028, portrait 1080×1920):
 
-- Top: remaining turns (hourglass + large number), 위험도 gauge (`Alert / MAX_ALERT`, UI label only), candy
-- Center: situation, event/action illustration, description
-- Bottom: choice cards with name, success chance, turn cost, non-zero success/fail effects, description
+- Top: current `PhaseName`, then remaining turns, 위험도 gauge with the text `Alert/MAX_ALERT`, candy
+- Center: shop or event illustration. Directly under it, the situation line. Action select uses `PhaseTable.SituationText`. A pending event uses `EventTable.EventDescription`. Event art still replaces the shop background when that sprite loads
+- Above the choices: the select timer (ceiling seconds). It counts down on action cards and on event options (D-031). It is hidden during result feedback and an ended run. Confirm popups pause it without hiding it.
+- Bottom: the existing vertical choice list (name, success chance, turn cost, non-zero success/fail effects, description) and the lobby button
 
 M1: placeholder UI only. Final art in later milestones.
 
-Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). Title requires a local nickname login before Lobby (D-018). In-run placeholder HUD is M1-8 (`RunHud` prefab). Choice results use M1-8.5 feedback (D-016): comic success/fail copy, character reaction, actual snapshot deltas, then `[계속]`. Result screen remains M1-9 / M2.
+Title / Lobby / Shop Select exist as M1-UI-1 hub screens (D-012). Player shop select becomes the D-021 4-card prefab when that task is implemented; the runtime list is not deleted beforehand. Title requires a local nickname login before Lobby (D-018). In-run placeholder HUD is M1-8 (`RunHud` prefab). Choice results use M1-8.5 feedback (D-016): comic success/fail copy, character reaction, actual snapshot deltas, then `[계속]`. That popup does not carry the operation title. The operation result is the PLAY-07 prefab: four endings, layout approved 2026-11-15, placeholder character art.
 
 ## Art direction (still valid)
 
@@ -282,7 +294,7 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 1. Required CSV tables load by ID with no name-based lookup.
 2. A run can attempt a required action, fail, retry, and succeed using table numbers.
 3. Failure spends turns and raises alert from data.
-4. Turns reaching 0 fail unless that action was a successful escape with candy ≥ `MIN_CANDY_TO_ESCAPE`. Last-turn escape fail follows D-011. Escape uses the same success roll as other actions (D-014). Alert ≥ `MAX_ALERT` always fails, including when it coincides with escape success.
+4. End check is D-030. Escape-action success with candy ≥ `MIN_CANDY_TO_ESCAPE` wins even if alert is max or turns are 0. Escape-action success with candy 0 is an empty-hand escape and settles 0. Otherwise alert ≥ `MAX_ALERT` is capture, then turns ≤ 0 is `NoTurns`. Escape uses the same success roll as other actions (D-014).
 5. After an `EventEligible` action, an enabled event may appear; resolving an option does not chain another event.
 6. If the run already ended, no event is shown.
 7. Portrait placeholder UI at 1080×1920 shows turns, alert, candy, and choices.
@@ -291,7 +303,7 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 ## Open decisions (ask before coding if blocking)
 
 1. Candy × `CandyMultiplier` rounding — **closed (D-009):** integer run candy; `CeilToInt` once on escape success; escape fail = 0.
-2. Whether an action whose `TurnCost` exceeds remaining turns can be selected — **closed (D-011):** no. Equal cost is allowed. Last-turn escape can win. Last-turn escape fail follows D-011. Alert ≥ max beats escape.
+2. Whether an action whose `TurnCost` exceeds remaining turns can be selected — **closed (D-011):** no. Equal cost is allowed. Last-turn escape can win. Overlap order is D-030: escape success is judged before alert and before 0 turns.
 3. RNG seed / run replay (M2).
 4. Score `risk_bonus` formula (M3). Until then `BASE_SCORE_MULTIPLIER`.
 5. Cosmetic currency display name (M4).
@@ -300,6 +312,13 @@ Detail and done-when: `Docs/PLAN.md`, `Docs/WBS.md`.
 8. When to generate `AssetTable` PNGs (not needed for M1 placeholders).
 9. Whether escape skips the success roll — **closed (D-014):** same formula as other actions; meeting conditions does not auto-succeed. Extra safer escape rows (rates / unlocks) stay **open**; do not add them.
 10. Event success timing, PhaseFilter snapshot, option shop bonus, pending — **closed (D-015).**
+11. Shipping shop count — **closed (D-021, D-027):** 20 shops, show 4. Names and weights are registered. `EnergyCost` and rumor effect rows stay open (P-016).
+12. Reroll max counts and paid prices — **open (P-014).** Until a max is set, the cap equals the free count (D-024). Do not charge gold.
+13. Which lobby control opens the quest board — **open (P-015).**
+14. Quest gold/candy payout — **open (P-017).** Do not grant it under D-020.
+15. Departure energy amount — **open.** D-020 still forbids inventing a spend. `EnergyCost` is stored and not subtracted (D-026).
+16. In-run phase label, `Alert/MAX_ALERT`, situation line, and the 30-second select limit — **closed (D-028, D-031).** Event options use the same limit. Timeout pick is not a new resolve order. PLAY-03 still needs a Unity review.
+17. Zero executable actions while the run is still `InProgress` — **open (P-018).** Timeout logs once and does not pick or add a fail. D-011 still ends on turns only after an action is applied.
 
 ---
 

@@ -63,6 +63,7 @@ Title / ShopSelect / Result  (uGUI screens)
 
 - Load UTF-8 BOM (`utf-8-sig`) CSV with a header row from `Resources/Table/` (`Resources.Load`).
 - Gameplay files: `GameConfig`, `ShopTable`, `PhaseTable`, `ActionTable`, `EventTable`, `EventOptionTable`, `AchievementTable`, `AssetTable`, `EffectTable`. Do not load `README.csv` as a table.
+- D-026 tables: `ShopRumorTable` and `ShopRumorCandidate` are on disk (headers only) and load as optional tables; `QuestTable` is specified and not on disk yet, so do not load it until the file exists. Do not apply `EffectTable` for rumors. Rumor effects reach a run only through the `RunState.Shop` snapshot (OP-DEV-04).
 - Index by the CSV PK (`Key`, `ShopID`, `PhaseID`, `ActionID`, `EventID`, `OptionID`, `AchievementID`, `AssetID`/`ImageKey`, `EffectID`).
 - Fail loud on duplicate or missing ID. Skip rows with `Enabled=0`. Do not apply `EffectTable` rows with `Implemented=0`.
 - Gameplay code asks for IDs, never for `ActionName` / `ShopName` text.
@@ -74,7 +75,7 @@ Start from a `ShopID` via `CsvDatabase` (`StartTurn`, `StartAlert`, candy 0, fir
 
 Mutations use Action/EventOption column values passed in by later resolvers. `RunState` does not roll success chance. Do not store `OptionID` as `LastActionID`. Do not route through `EffectTable` until `Implemented=1`. After `Won`/`Failed`, reject further mutation. Pending event blocks action select/apply.
 
-Clamps: turns and candy ≥ 0; alert in `[0, GameConfig.MAX_ALERT]`. Limits come from tables/config, not literals in C#.
+Clamps: turns and candy ≥ 0; alert in `[0, GameConfig.MAX_ALERT]`. Limits come from tables/config, not literals in C#. `ACTION_SELECT_TIME_SEC` is a required INT ≥ 1 (D-028). It is not an input to `ActionResolver`.
 
 Candy (D-009):
 
@@ -94,8 +95,9 @@ Selection: `TurnCost` > remaining turns is rejected with no state change. Equal 
 
 Order: reject if `TurnCost` > remaining → subtract `TurnCost` → success/fail deltas → end check (above) → event if still `InProgress`.
 
-- Success chance `%` = clamp(`SuccessRate` + `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). `ActionResolver` computes and rolls this (M1-4). Inject `IChanceRoll` in tests. Event options use the same formula on `EventOptionTable.SuccessRate` (D-015).
-- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + `EventRateBonusPp`, 0, 100). `ActionResolver` reports whether an event check is due; `EventResolver` rolls trigger chance, filters candidates, and `Weight`-picks (M1-7). Do not draw inside `ActionResolver.TryResolve`.
+- Success chance `%` = clamp(`SuccessRate` + snapshot `SuccessRateBonusPp`, `MIN_SUCCESS_RATE`, `MAX_SUCCESS_RATE`). `ActionResolver` computes and rolls this (M1-4). Inject `IChanceRoll` in tests. Event options use the same formula on `EventOptionTable.SuccessRate` (D-015).
+- Event chance `%` = clamp(`EVENT_TRIGGER_RATE` + snapshot `EventRateBonusPp`, 0, 100). `ActionResolver` reports whether an event check is due; `EventResolver` rolls trigger chance, filters candidates, and `Weight`-picks (M1-7). Do not draw inside `ActionResolver.TryResolve`.
+- With no rumors, the snapshot equals the shop row (D-022). Rumors may add `SuccessRateBonusPp`, `AlertDelta` onto `StartAlert`, `CandyMultiplierDelta`, and `EventRateBonusPp` once at run start. They do not change D-011 order, `StartTurn`, or in-run event draw.
 - Candy during run: add integer `SuccessCandy` / `FailCandy` (and event-option candy). Do **not** multiply by `CandyMultiplier` per action (D-009).
 - Escape success (later): `finalReward = CeilToInt(runCandy × CandyMultiplier)`. Escape fail: `finalReward = 0`.
 - Required fail: keep the action choosable in the same phase while `InProgress`.
@@ -108,15 +110,17 @@ RNG: `UnityEngine.Random` unless P-006 requires a seed.
 
 - v0.2 start scene: `Assets/Scenes/V02/Title.unity` (D-012). Do not reuse `SampleScene` as the production HUD. `SampleScene` stays in the project, not first in Build Settings.
 - Hub screens in that scene: Title, Lobby, Shop Select (D-012). Title waits for nickname login (D-018) before Lobby. After shop pick, instantiate `Resources/V02/UI/RunHud` under the same Canvas SafeArea (M1-8).
+- Shipping shop select is the D-021 prefab `Resources/V02/UI/OperationPrep`. It holds four instances of `Resources/V02/UI/ShopCard`. A logged-in player opens that screen from lobby `작전 시작`. If the prefab asset is missing, the hub shows 준비 중. The runtime Shop Select builder stays for the no-profile preview (D-007, D-019). Quest board entry is P-015. Cards bind the current list, grades, `EnergyCost`, and the rumor snapshot. Shop art uses `Resources.Load` from `Assets/Resources/V02/Shops/` with the `AssetTable` file name. `FilePath` strings stay `Assets/Art/Shops/...`. The risk widget stays in the card and is hidden until a risk value is supplied. Screen layout is manual review.
 - Title UI is scene-authored under `TitleCanvas` (D-019). Lobby is scene/Prefab-authored (`Assets/Scenes/V02/Lobby.unity`, `Assets/Prefabs/V02/UI/Lobby.prefab`). Edit Mode layout is the source of truth. Runtime code binds login/fade/HUD numbers only.
 - Static UI (title, lobby, settings, shop, fixed HUD) belongs in a scene or prefab. Dynamic UI (lists, slots, toasts) may spawn from prefabs. Do not reset saved RectTransforms on play.
 - Canvas Scaler: Scale With Screen Size, 1080×1920, match width or height 0.5.
 - Safe Area wrapper on the hub root. Run HUD stretches inside it.
 - Prefabs: `RunHud.prefab` + `ChoiceButton.prefab`. Layout is Inspector-editable. Choice count Instantiates from CSV.
 - One `ChoiceList` for required actions, optional actions, and event options. `IsActionPresented` / `IsOptionPresented` separate hide vs `InsufficientTurns` disable. Execute still uses `EvaluateSelect` / `EvaluateSelectOption`.
-- Top bar: turns, alert, candy. Center: phase or event copy, placeholder illustration via `ImageKey`. Bind to `RunState` + resolvers.
+- Run HUD, top to bottom (D-028, 1080×1920): `PhaseName`; turns, alert text `Alert/MAX_ALERT` plus the existing fill, candy; illustration; situation line; action-select timer slot; vertical `ChoiceList`; lobby button. `PhaseTable.SituationText` is the action-select line. `Notes` is not displayed. A pending event keeps the phase label and swaps the line to `EventDescription`. The illustration uses the same shop `BackgroundImageKey` as the prep card: `AssetTable` then `Resources.Load` from `V02/Shops/` (editor and player builds). `FilePath` stays `Assets/Art/Shops/...`. A pending event keeps the old image path and replaces the illustration only when that sprite loads. A missing file keeps the existing placeholder. The timer slot shows `ACTION_SELECT_TIME_SEC` with `Ceil`. It counts down for action cards and for event options (D-031). Confirm popups pause it. Result feedback and an ended run hide it and stop it. At 0 it picks one executable choice with equal probability through the existing resolve, unless none can execute, in which case it logs once and does not fail (P-018). PLAY-03 is not Done until a Unity review. Fixed bars stay on `RunHud.prefab`; runtime binds text, fill, and visibility only.
+- Run HUD lobby, while `InProgress`, opens a confirm dialog and blocks choice input. Cancel changes nothing. Confirm marks the run `Failed` with `FailReason.Abandon` and calls `ShopListManager.AbandonRun`, which reuses `SettleRun` (one `settledRunId`, next shop list). The lobby is shown only after that save succeeds. An already ended run does not abandon-settle; result continue still settles. A killed process still only clears `activeRunId` (D-025). No energy or gold debit.
 - Result feedback (M1-8.5): overlay modal with reaction sprite, wrapping body, snapshot deltas, `[계속]`. Presentation IDs live in `ResultFeedbackTable`; sprites are Inspector/`Resources/V02/Feedback` mapped. Rebuild menu asks before overwriting prefabs; use Patch to keep Inspector slots.
-- M1: TMP text and default buttons. Event PNG files are not shipped; placeholder remains. Result screen is M1-9.
+- M1: TMP text and default buttons. Event PNG files are not shipped. If that sprite is missing, the shop background stays; if the shop file is missing too, the placeholder remains. Result screen is M1-9.
 
 ## Save (M4)
 
@@ -124,6 +128,8 @@ RNG: `UnityEngine.Random` unless P-006 requires a seed.
 Do not store run power-ups. Cosmetic currency cannot modify `ActionTable` chances.
 
 M1 nickname profiles (D-018) are separate: JSON at `Application.persistentDataPath/CandyThief/profiles.json`. D-020 energy / gold / lobby-candy (cumulative `finalReward`) extend this file per nickname. Do not use P-010 PlayerPrefs for those fields. Gold grant is not implemented (display 0). `finalReward` grant is M1-9.
+
+D-026 adds operation fields on the same schema id `candythief.v02.profiles.v1`. Do not bump the id. New fields: shop list id and four shop ids, rumor pairs, shop free/total reroll counts, six quest slots (`OFFERED` / `ACCEPTED` / `CLAIMABLE` plus progress), quest free/total reroll counts, `lastOperationDay`, `activeRunId`, `settledRunId`. A killed process clears `activeRunId` only (D-025). Do not grant quest rewards until P-017. OP-DEV-05 implemented the shop part (list, rumor pairs, reroll counts, previous list, `activeRunId`, `settledRunId`); quest slots and `lastOperationDay` are still not saved.
 
 ## Reuse vs new
 

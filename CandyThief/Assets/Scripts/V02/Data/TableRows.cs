@@ -4,6 +4,12 @@ public enum ActionType
     OPTIONAL
 }
 
+public enum ActionStance
+{
+    STABLE,
+    RISKY
+}
+
 public enum ConditionKey
 {
     NONE,
@@ -20,6 +26,39 @@ public enum GameConfigValueType
     INT,
     FLOAT,
     BOOL
+}
+
+// D-026 grade labels. NONE = not assigned yet (blank cell). Resolvers never read these; they read the numeric columns.
+public enum DistanceGrade
+{
+    NONE,
+    NEAR,
+    MID,
+    FAR
+}
+
+public enum ScaleGrade
+{
+    NONE,
+    SMALL,
+    MEDIUM,
+    LARGE
+}
+
+public enum SecurityGrade
+{
+    NONE,
+    LOOSE,
+    NORMAL,
+    STRICT
+}
+
+public enum GoodsGrade
+{
+    NONE,
+    NORMAL,
+    HIGH,
+    TOP
 }
 
 public sealed class GameConfigRow
@@ -45,7 +84,19 @@ public sealed class ShopRow
     public string BackgroundImageKey;
     public ConditionKey UnlockCondition;
     public bool Enabled;
+    public int SpawnWeight;
+    public DistanceGrade DistanceGrade;
+    public ScaleGrade ScaleGrade;
+    public SecurityGrade SecurityGrade;
+    public GoodsGrade GoodsGrade;
+    public int EnergyCost;
     public string Notes;
+
+    // 런 시작 스냅샷용 복사본. 원본 테이블 행은 수정하지 않는다 (D-022).
+    public ShopRow Clone()
+    {
+        return (ShopRow)MemberwiseClone();
+    }
 }
 
 public sealed class PhaseRow
@@ -58,6 +109,7 @@ public sealed class PhaseRow
     public ConditionKey CompleteCondition;
     public string NextPhaseID;
     public bool AllowOptionalActions;
+    public string SituationText;
     public string Notes;
 }
 
@@ -82,6 +134,11 @@ public sealed class ActionRow
     public bool EventEligible;
     public bool Enabled;
     public string Notes;
+    public ActionStance ActionStance;
+    public int SpawnWeight;
+    public string ImageKey;
+    public int SuccessCandyMin;
+    public int SuccessCandyMax;
 }
 
 public sealed class EventRow
@@ -174,6 +231,31 @@ public sealed class ResultFeedbackRow
     public string FailText;
     public string SuccessPresentationID;
     public string FailPresentationID;
+    public string SuccessImageKey;
+    public string FailImageKey;
     public bool Enabled;
     public string Notes;
+}
+
+// D-026: 가게 소문. 효과는 런 시작 스냅샷 4종 보정치로만 표현한다 (D-022).
+public sealed class ShopRumorRow
+{
+    public string RumorID;
+    public string RumorName;
+    public string RumorText;
+    public string HintText;
+    public string ConflictGroup;
+    public int SuccessRateBonusPp;
+    public int AlertDelta;
+    public float CandyMultiplierDelta;
+    public int EventRateBonusPp;
+    public bool Enabled;
+    public string Notes;
+}
+
+public sealed class ShopRumorCandidateRow
+{
+    public string ShopID;
+    public string RumorID;
+    public int Weight;
 }

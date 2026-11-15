@@ -9,7 +9,7 @@
 규칙,성공률,"ActionTable SuccessRate + ShopTable SuccessRateBonusPp(퍼센트포인트), 0~100으로 제한"
 규칙,사탕 보상,플레이 중 사탕은 정수로 누적. CandyMultiplier는 탈출 성공 시 합계에 한 번만 적용하고 소수점은 올림(CeilToInt). 탈출 실패 시 최종 보상 0. 버림 폐기(D-009)
 규칙,실패,필수 행동 실패 시 같은 페이즈에서 재시도. 턴 0 또는 경계도 100 이상 즉시 패배
-규칙,탈출,사탕 1개 이상 획득 후 LOOT의 ACT_013으로 ESCAPE 전환. 탈출 성공 시 승리
+규칙,탈출,LOOT의 탈출 준비로 ESCAPE에 들어간다. 사탕이 없어도 진입할 수 있고 턴과 성공 판정은 없다. 탈출 행동 성공의 승리는 MIN_CANDY_TO_ESCAPE. ACT_013은 일반 추첨에서 제외
 규칙,점수,획득 사탕 × 위험 보너스. 위험 보너스 산식은 미확정이므로 구현 전 별도 결정 필요
 규칙,영구 성장,칭호/꾸미기만 영구 보존. 게임 능력치에 영향 없음
 데이터,참조 무결성,ShopTable.BackgroundImageKey 및 EventTable.ImageKey는 AssetTable.ImageKey 참조
