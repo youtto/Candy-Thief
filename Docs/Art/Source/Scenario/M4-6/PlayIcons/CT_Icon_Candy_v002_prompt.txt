@@ -1,0 +1,33 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs (priority):
+1. asset_g642xgkXv1jtZ9Zh4eCJz8zT — approved candy-thief HUD. Candy design and candy-thief colors.
+2. asset_N695fyhJYUF52sTzrs9Rn4YV — 운빨존많겜 hero-list screen. Outline weight, stubby silhouette, and flat cel shading only.
+Excluded: CT_Icon_Candy_v001 and every other generated icon.
+
+PROMPT:
+A single game UI icon of one plump wrapped candy, centered on a fully transparent background. Playful, chunky 2D cartoon game icon with charming, slightly imperfect hand-drawn shapes.
+
+The first reference is the approved candy-thief HUD. Recreate the pink wrapped candy from the "사탕 획득" card in that image: a fat round candy body tilted about 20 degrees, with an oversized twisted wrapper fan on the left and on the right. Keep that cute candy color identity: warm pink body, lighter pink stripes, pink wrappers. Hex codes below are only a loose helper. Do not copy that image's layout, panels, cards, characters, text, or its thin glossy rendering.
+
+The second reference is another game's hero screen. Use it only for the heavy outer contour, the stubby exaggerated silhouette, and the flat hard-edged color blocks. Match that blunt, slightly imperfect cartoon contour and simple cel shading. Do not copy its characters, creatures, weapons, orange cards, buttons, layout, text, or colors. The candy stays pink, and the outline stays dark chocolate brown, not black.
+
+Shape: one chubby candy. The body is a simple round oval with a blunt, oversized silhouette. Exactly three broad curved stripes, alternating a deeper pink and a light pink, separated by the color blocks themselves. Each wrapper end is a short plump fan with two or three rounded lobes and one darker fold. Slightly uneven and hand-drawn, not mechanically symmetric, with no sharp points. No stick, bow, sprinkles, or extra decoration.
+
+Outline, most important: the outer contour is dark chocolate brown, helper about #29140C, not pure black and not gray. On this 1024 canvas the outer contour is about 110 to 125 pixels thick, roughly one seventh of the candy body's width, blunt and rounded, with a slightly imperfect hand-drawn edge like the heavy contours in the second reference. Interior seams, only the wrapper neck and the single wrapper fold, are clearly thinner, about half of the outer contour. The thick contour must stay heavy, but it must not swallow the three stripes or the wrapper lobes. Hard edge only. No soft halo, no blurred edge, no outer glow, no drop shadow.
+
+Color and shading: flat fills, the same simple cel-shading idea as the second reference, in the candy-thief pinks. Body helper about #E98BA8, light stripe helper about #FFD0DC. One hard darker-pink shape covering only the lower third. One small hard-edged cream highlight on the upper left. No gradients, no specular dots, no shiny bands, no glossy plastic.
+
+Canvas: the whole candy, including both wrappers and the thick outline, fills about 75 to 80 percent of the canvas width, centered, with clear transparent margin on every side. No part of the outline or wrappers touches or is cut by the canvas edge. Readable at 48 pixels because the round body, three stripes, and two wrapper fans stay separate.
+
+Avoid: thin outline, black outline, gray outline, copied characters, copied orange UI, glossy highlights, soft gradients, glow, bloom, shadow, many stripes, fine lines, sprinkles, hearts, bows, lollipop stick, text, letters, numbers, UI panel, card, frame, background shape, cropped edges, multiple candies.
+
+RESULT:
+job_nfc7tsGkEbYC1jqWQH4JP4gd
+asset_rAXK7rMw9K3ppf2JdVws6LGr
+cuCost 13, cuDiscount 0
+dry_run 13 before generation
+1024x1024, RGBA, transparent
+PNG: CT_Icon_Candy_v002.png
+Refs: asset_g642xgkXv1jtZ9Zh4eCJz8zT, asset_N695fyhJYUF52sTzrs9Rn4YV
+Measured outer contour about 39-60 px on the 1024 master, about 1-2 px at the 44 and 46 slots. Info-chip border is 6 px. Not retried.

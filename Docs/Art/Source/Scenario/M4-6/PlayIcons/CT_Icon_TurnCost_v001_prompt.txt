@@ -1,0 +1,29 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs (priority): asset_g642xgkXv1jtZ9Zh4eCJz8zT (clock design, primary), asset_qyCAyjjGxMZty8nqTMkujt1B (approved candy icon, style only: outline, plump form, shading, color harmony)
+
+PROMPT:
+A single game UI icon of one chubby round alarm-style clock, centered on a fully transparent background. Playful, chunky 2D cartoon game icon with charming, slightly imperfect hand-drawn shapes.
+
+Recreate the clock on the "턴 소모" card in the first reference image as faithfully as possible: the same shape, the same colors, and the same arrow position and proportions. The colors and form of that clock take top priority. Hex codes below are only a loose helper, not strict values.
+
+The second reference is an approved candy icon. Use it only for outline softness, a plump silhouette, gentle shading, and natural color harmony. Do not copy the candy's shape, stripes, wrappers, decorations, or glossy highlights onto the clock.
+
+Shape: a chubby round clock. Thick soft coral-red rim (helper about #E8604C), round cream clock face (helper about #FFF3D6), and a small rounded knob on top of the clock. Two short, thick, dark chocolate brown clock hands pointing to about 12 and 3, with a small round center dot, and two or three tiny tick marks only. A small plump cream-yellow arrow (helper about #FFD866) with a brown outline sits at the upper right of the clock, pointing up-right, slightly overlapping the rim, merged with the clock into one icon. One tiny white highlight arc on the upper left of the rim. Slightly imperfect and hand-drawn, not mechanically symmetric, with no sharp points.
+
+Outline: a thick, smooth, rounded dark chocolate brown outline (helper about #4A2C1D, not black) that matches the line weight of the clock in the first reference and blends naturally with the plump shapes. The charm comes from the plump shape, soft color harmony, and gentle shading, not from line thickness alone.
+
+Color and shading: a warm, soft palette matching the first reference. Flat color fills with one soft darker shade on the lower side and one small white highlight arc. Matte finish. Do not transfer the candy icon's gloss: no shiny bands, no large specular spots, no metallic shine, no glossy gradients, no realistic shadow, no drop shadow, no glow.
+
+Canvas: the clock, including the top knob and the upper-right arrow, fills about 75 to 80 percent of the canvas width, centered, with clear transparent margin on every side so no part of the arrow, knob, or outline touches or is cut by the canvas edge. Readable at 48 px.
+
+Do not copy the references' layout, panels, cards, backgrounds, characters, text, or neighboring icons.
+
+Avoid: hourglass, sand, realistic watch, metal or glass shine, glossy candy-like highlights, Roman numerals, many tick marks, thin hands, black outline, gears, candy, stripes, wrappers, text, letters, numbers, multiple clocks, sparkles, UI panel, card, frame, background shape, shadow, cropped edges.
+
+RESULT:
+job_aGxcVjikYRYNZyv88p1bjXYo
+asset_VDTj3AHMkkSPuxT2GdBU6HZv
+cuCost 13, cuDiscount 0
+1024x1024, Format32bppArgb
+PNG: CT_Icon_TurnCost_v001.png

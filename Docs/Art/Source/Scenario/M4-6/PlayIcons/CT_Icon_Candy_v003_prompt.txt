@@ -1,0 +1,31 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Excluded on purpose: candy-thief HUD comps, CT_Icon_Candy_v001, CT_Icon_Candy_v002, CT_Icon_TurnCost_v001, and every other previously generated icon.
+
+Refs, in this order:
+1. asset_N695fyhJYUF52sTzrs9Rn4YV — hero list
+2. asset_A9tTdGsdSMYKyB1khyiQGimT — upgrade popup
+3. asset_fCqnnNKQhLJ9t8yWWb5h3hWJ — battle screen
+4. asset_xaQxw116Wnzm7twUj7ckhEai — lobby path
+5. asset_dCaQKBfYdqKxqkRUaCJDUf5j — lobby with side buttons
+6. asset_DW7F4khmuxnkqha53TPDxu4x — poster
+
+PROMPT:
+A single mobile-game icon of one candy, centered on a fully transparent background. Design it freely from scratch.
+
+The six reference images are the only art direction. Make this candy look like an icon that already belongs in those screens: the same heavy, lively outline, the same cute and distinctive cartoon shapes, the same flat blocks of color, and the same restrained shading. It should stay clear at a very small size, as the icons and characters in the references do.
+
+Decide the candy's shape, colors, pattern, and shading from the references. Do not recreate an older candy icon.
+
+Do not copy the references' characters, creatures, weapons, vehicles, cards, buttons, screens, layout, or text. Draw only the candy, with transparent space around it so the outline is not cropped.
+
+Avoid: copied characters, copied UI, text, letters, numbers, multiple candies, cropped edges.
+
+RESULT:
+job_47KtmvCZA5APgXH6RsvF444k
+asset_sxw3oKqtKN1wBqqTW5aAWNYD
+cuCost 15, cuDiscount 0
+1024x1024, RGBA, transparent
+PNG: CT_Icon_Candy_v003.png
+Refs: asset_N695fyhJYUF52sTzrs9Rn4YV, asset_A9tTdGsdSMYKyB1khyiQGimT, asset_fCqnnNKQhLJ9t8yWWb5h3hWJ, asset_xaQxw116Wnzm7twUj7ckhEai, asset_dCaQKBfYdqKxqkRUaCJDUf5j, asset_DW7F4khmuxnkqha53TPDxu4x
+Not retried.

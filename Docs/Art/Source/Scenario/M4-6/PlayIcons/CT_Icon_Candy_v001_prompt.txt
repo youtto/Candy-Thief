@@ -1,0 +1,18 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs (priority): asset_g642xgkXv1jtZ9Zh4eCJz8zT (primary), asset_WUhBSCnjpX9NUtH6DtBfgrvx, asset_SHAUUziw26RPUs74Uqq18RkN
+
+PROMPT:
+A single cute casual mobile-game UI icon of a plump wrapped candy, one isolated object centered on a fully transparent background. Recreate the pink-and-white striped wrapped candy shown in the "사탕 획득" (candy gain) card at the bottom-left of the first reference image (the result popup): same chubby proportions, same soft pink and light pink stripes, same cute oversized twisted wrapper ends, same soft sticker-like cartoon look and warm color mood. The actual colors and the cute cartoon style of the reference images take top priority; hex codes below are only a loose helper, not strict values.
+
+Shape: a fat round candy body, slightly tilted about 20 degrees, with a big cute twisted wrapper on both the left and right sides (soft ruffled fan-shaped ends, slightly asymmetric and toy-like, not mechanically symmetric). Chubby, plump, slightly exaggerated proportions, softly rounded everywhere, no sharp points. Body in soft pink with 3 to 4 curved light-pink / near-white stripes; wrapper ends in the same soft pink with a lighter pink inner fold.
+
+Outline: a thick, smooth, rounded dark chocolate brown outline (helper color about #4A2C1D, not black) that matches the reference line weight and blends naturally with the plump shapes. It must NOT look like a stiff, heavy, thick-outlined vector icon; the cuteness comes from the plump shape, soft color harmony and gentle shading, not from line thickness alone.
+
+Color and shading: warm, soft, slightly pastel palette like the reference (helper colors: pink about #F58AA6, light pink about #FFC7D8, cream about #FFF3D6). No pure saturated primary colors, no neon. Flat color fills with one soft darker pink shade on the lower side and two or three small white highlight spots or arcs on the upper-left of the candy body for a gentle toy-like volume. Matte look: no metallic shine, no glossy gradients, no realistic shadow, no drop shadow, no glow.
+
+Canvas: the candy including its wrapper ends fills about 75 to 80 percent of the canvas width, centered, with clear transparent margin on every side so that no part of the wrappers or outline touches or is cut by the canvas edge. Readable at 48 px.
+
+Use the reference images only for style, line weight, color warmth, shading and cuteness. Do not copy their layout, panels, cards, backgrounds, characters, text, or neighboring icons.
+
+Avoid: blue candy, lollipop stick, hard-candy realism, glossy gradients, glitter, sparkle rays, many sprinkles, hearts, bows, fancy patterns, multiple candies, text, letters, numbers, UI panel, button, card, frame, background shape, shadow, cropped edges.

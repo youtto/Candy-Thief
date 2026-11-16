@@ -171,7 +171,7 @@ public static class V02RunHudPrefabBuilder
         art.color = PlaceholderArt;
         art.raycastTarget = false;
         Image typeIcon = NewImage("TypeIcon", artMaskImage.transform, artInner, new Rect(108f, 52f, 84f, 84f), 0f, Color.white);
-        typeIcon.sprite = LoadSprite(ArtFolder + "CT_Hud_Candy_v001.png");
+        typeIcon.sprite = LoadSprite(ArtFolder + "CT_Icon_Candy_v005.png");
         typeIcon.preserveAspect = true;
 
         // 이름 판: 양 끝이 뾰족한 갈색 띠
@@ -189,15 +189,15 @@ public static class V02RunHudPrefabBuilder
         AutoSize(chance, 28f, 52f, false);
 
         // 정보 칩 3개: 사탕(민트) / 소모 턴(노랑) / 위험도(코랄). 사탕·위험도 칩은 전체가 버튼이다.
-        Button candyInfo = BuildInfoChip("CandyInfo", r, new Rect(28f, 316f, 144f, 60f), CandyPill, ArtFolder + "CT_Hud_Candy_v001.png", out TextMeshProUGUI successText);
+        Button candyInfo = BuildInfoChip("CandyInfo", r, new Rect(28f, 316f, 144f, 60f), CandyPill, ArtFolder + "CT_Icon_Candy_v005.png", out TextMeshProUGUI successText);
         RectTransform costChip = Plate("CostChip", r, CardSize, new Rect(184f, 316f, 150f, 60f), 24f, Ink, InfoChipLine, out Image costFill);
         costFill.color = Yellow;
         Image costIcon = NewImage("CostIcon", costChip, new Vector2(150f, 60f), new Rect(8f, 6f, 46f, 48f), 0f, Color.white);
-        costIcon.sprite = LoadSprite(ArtFolder + "CT_Hud_Hourglass_v003.png");
+        costIcon.sprite = LoadSprite(ArtFolder + "CT_Icon_TurnCost_v006.png");
         costIcon.preserveAspect = true;
         TextMeshProUGUI costText = NewText("Cost", costChip, new Vector2(150f, 60f), new Rect(56f, 4f, 88f, 50f), "2턴", 36f, DarkText, TextAlignmentOptions.Center, false);
         AutoSize(costText, 22f, 38f, false);
-        Button alertInfo = BuildInfoChip("AlertInfo", r, new Rect(346f, 316f, 133f, 60f), AlertPill, ArtFolder + "CT_Hud_Alert_v002.png", out TextMeshProUGUI failText);
+        Button alertInfo = BuildInfoChip("AlertInfo", r, new Rect(346f, 316f, 133f, 60f), AlertPill, ArtFolder + "CT_Icon_Alert_v005.png", out TextMeshProUGUI failText);
 
         // 설명 패널
         Rect descRect = new Rect(28f, 388f, 451f, 72f);
@@ -390,7 +390,7 @@ public static class V02RunHudPrefabBuilder
         Button lobby = escape.gameObject.AddComponent<Button>();
         StyleButton(lobby, escapeFill, Color.white);
         Image door = NewImage("Icon", escape, EscapeRect.size, new Rect(22f, 16f, 80f, 80f), 0f, Color.white);
-        door.sprite = LoadSprite(ArtFolder + "CT_Icon_Escape_v001.png");
+        door.sprite = LoadSprite(ArtFolder + "CT_Icon_Exit_v005.png");
         door.preserveAspect = true;
         TextMeshProUGUI escapeLabel = NewText("Label", escape, EscapeRect.size, new Rect(108f, 0f, EscapeRect.width - 128f, EscapeRect.height - 4f), "탈출 준비하기", 54f, Color.white, TextAlignmentOptions.Center, true);
         AutoSize(escapeLabel, 34f, 54f, false);
@@ -438,12 +438,13 @@ public static class V02RunHudPrefabBuilder
         so.FindProperty("candyChip").objectReferenceValue = candyChip;
         so.FindProperty("candyIcon").objectReferenceValue = candyIcon;
         so.FindProperty("hourglassSprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Hud_Hourglass_v003.png");
-        so.FindProperty("alertSprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Hud_Alert_v002.png");
-        so.FindProperty("candySprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Hud_Candy_v001.png");
+        so.FindProperty("turnCostSprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_TurnCost_v006.png");
+        so.FindProperty("alertSprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Alert_v005.png");
+        so.FindProperty("candySprite").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Candy_v005.png");
         so.FindProperty("moveIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Move_v001.png");
         so.FindProperty("infiltrateIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Infiltrate_v001.png");
-        so.FindProperty("lootIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Hud_Candy_v001.png");
-        so.FindProperty("escapeIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Escape_v001.png");
+        so.FindProperty("lootIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Candy_v005.png");
+        so.FindProperty("escapeIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Exit_v005.png");
         so.FindProperty("eventIcon").objectReferenceValue = LoadSprite(ArtFolder + "CT_Icon_Event_v001.png");
         so.FindProperty("phaseText").objectReferenceValue = phaseLabel;
         so.FindProperty("timerRoot").objectReferenceValue = timerRoot.gameObject;
@@ -505,7 +506,7 @@ public static class V02RunHudPrefabBuilder
         innerLine.pixelsPerUnitMultiplier = 1.6f;
 
         icon = NewImage("AlertIcon", root, size, new Rect(26f, 14f, 58f, 56f), 0f, Color.white);
-        icon.sprite = LoadSprite(ArtFolder + "CT_Hud_Alert_v002.png");
+        icon.sprite = LoadSprite(ArtFolder + "CT_Icon_Alert_v005.png");
         icon.preserveAspect = true;
         NewText("AlertCaption", root, size, new Rect(92f, 18f, 120f, 48f), "위험도", 34f, Color.white, TextAlignmentOptions.Left, true);
         value = NewText("AlertValue", root, size, new Rect(196f, 16f, 200f, 52f), "45/100", 48f, Color.white, TextAlignmentOptions.Right, true);
@@ -552,7 +553,7 @@ public static class V02RunHudPrefabBuilder
         chip.color = Yellow;
         Vector2 size = CandyChipRect.size;
         icon = NewImage("CandyChipIcon", root, size, new Rect(14f, 26f, 100f, 100f), 0f, Color.white);
-        icon.sprite = LoadSprite(ArtFolder + "CT_Hud_Candy_v001.png");
+        icon.sprite = LoadSprite(ArtFolder + "CT_Icon_Candy_v005.png");
         icon.preserveAspect = true;
         NewText("CandyChipCaption", root, size, new Rect(116f, 16f, 190f, 40f), "사탕", 30f, Color.white, TextAlignmentOptions.Center, true);
         value = NewText("CandyChipValue", root, size, new Rect(116f, 50f, 190f, 96f), "100", 88f, Color.white, TextAlignmentOptions.Center, true);

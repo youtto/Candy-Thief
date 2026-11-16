@@ -1,0 +1,30 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Status: prompt revised. Design is free. Generate only if the three dry runs total 36 CU or less.
+Style ref only: asset_8yKy3eb4jrxNV9MGQjnxreH1 — approved candy v005. Drawing style only.
+Do not attach older exit icons.
+
+PROMPT:
+A single mobile-game icon that means escape, centered on a fully transparent background.
+
+The reference is an approved candy icon. Use it only for the drawing style: the same heavy dark-brown outline, internal lines as thick as the outer contour, simple flat colors, and a slightly darker shade on the lower part. Do not copy the candy's shape, stripes, or wrappers.
+
+Design it freely. Keep only the meaning: one door and one arrow. Choose their shapes, colors, proportions, and small decorations yourself. Keep it simple and readable when very small.
+
+Every dark outline is as thick as the candy's outline. The door, its inner lines, and the arrow use that same thickness. Do not leave any internal line thinner.
+
+Add a little volume. A slightly darker shade sits on the lower part of the door and the arrow. Keep it matte and simple. No glossy highlights, no round shine spots, and no glow.
+
+Leave clear transparent space around the door and the arrow so the thick outline is not cropped.
+
+Avoid: pixel art, thin outline, thin internal lines, glossy highlights, glow, background shadow, candy, clock, text, numbers, multiple doors, cropped edges.
+
+RESULT:
+job_P7FeoFgC3pJ45YbBArxkVN1N
+asset_nG8e9bVKwnGbwCX4i4Fdk1FL
+dry_run 12, cuCost 12
+1024x1024, transparent
+PNG: CT_Icon_Exit_v005.png
+Ref: asset_8yKy3eb4jrxNV9MGQjnxreH1
+The first submit was refused by the plan's two-job limit before a job existed. It was sent once after the other two finished. Not retried after a result.
+

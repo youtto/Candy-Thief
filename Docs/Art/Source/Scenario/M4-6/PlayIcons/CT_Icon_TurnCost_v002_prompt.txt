@@ -1,0 +1,23 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs (priority):
+1. asset_g642xgkXv1jtZ9Zh4eCJz8zT — approved candy-thief HUD. Clock design and candy-thief colors.
+2. asset_N695fyhJYUF52sTzrs9Rn4YV — 운빨존많겜 hero-list screen. Outline weight, stubby silhouette, and flat cel shading only.
+Excluded: CT_Icon_TurnCost_v001 and CT_Icon_Candy_v001. Do not inherit the mint knob, oversized vertical arrow, four tick marks, or glossy rim.
+
+PROMPT:
+A single game UI icon of one chubby round alarm-style clock with one small yellow arrow, centered on a fully transparent background. Playful, chunky 2D cartoon game icon with charming, slightly imperfect hand-drawn shapes.
+
+The first reference is the approved candy-thief HUD. Recreate the clock on the "턴 소모" card in that image: a coral-red rim, a cream face, a small rounded knob on top in the same coral family, two thick brown hands pointing to about 12 and 3, and a plump cream-yellow arrow at the upper right pointing up and to the right. The arrow is clearly smaller than the clock and overlaps the rim only slightly, so the clock and the arrow stay separate at a small size. Hex codes below are only a loose helper. Do not copy that image's layout, panels, cards, characters, text, or its thin glossy rendering.
+
+The second reference is another game's hero screen. Use it only for the heavy outer contour, the stubby exaggerated silhouette, and the flat hard-edged color blocks. Do not copy its characters, creatures, weapons, orange cards, buttons, layout, text, or colors. The clock stays coral, cream, and yellow, and the outline stays dark chocolate brown, not black.
+
+Shape: a simple chubby circle. No tick marks and no numerals. The hands are short fat rounded bars, not thin needles, with one round center dot. The top knob is a small coral cap, the same family as the rim, not mint and not teal. The arrow is a small fat arrow with its own silhouette. Slightly uneven and hand-drawn, not mechanically symmetric, with no sharp points.
+
+Outline, most important: the outer contour of the clock and the separate outer contour of the arrow are dark chocolate brown, helper about #29140C, not pure black and not gray. On this 1024 canvas that outer contour is about 110 to 125 pixels thick, blunt and rounded, with a slightly imperfect hand-drawn edge like the heavy contours in the second reference. The arrow's contour is the same color and weight, so the arrow does not melt into the rim. Interior edges, only the inner rim and the hands, are clearly thinner, about half of the outer contour. Hard edge only. No soft halo, no blurred edge, no outer glow, no drop shadow.
+
+Color and shading: flat fills. Coral rim helper about #E8604C, with one hard darker-coral band on the lower rim only. Cream face helper about #FFF3D6, completely flat. Yellow arrow helper about #FFD866, with one small hard darker-gold shape on its lower side. One tiny hard-edged cream highlight on the upper-left rim. No gradients, no specular spots, no shiny bands, no metal, no glass.
+
+Canvas: the clock, knob, arrow, and thick outline together fill about 75 to 80 percent of the canvas width, centered, with clear transparent margin on every side. No part of the knob, arrow, or outline touches or is cut by the canvas edge. Readable at 48 pixels because the circle, the two fat hands, and the yellow arrow stay distinct.
+
+Avoid: hourglass, sand, mint knob, teal knob, tick marks, Roman numerals, thin hands, thin outline, black outline, gray outline, glossy highlights, soft gradients, glow, bloom, shadow, metal, glass, gears, candy, stripes, wrappers, text, letters, numbers, multiple clocks, sparkles, UI panel, card, frame, background shape, cropped edges.

@@ -1,0 +1,25 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs: asset_7UJxaqGooby3HbvxVGjCRkDh — 행동력 lightning badge. Outline weight and flat shading only.
+Excluded: candy-thief HUD comps, CT_Icon_Candy_v001, v002, v003, and the turn-cost icon.
+
+PROMPT:
+A single mobile-game icon of one simple wrapped candy, centered on a fully transparent background.
+
+The reference is a yellow lightning bolt on a small badge. Copy only the bolt's drawing style. The candy outline must be as thick and blunt, relative to the candy, as that bolt's dark outline is relative to the bolt. Use the same flat, simple color and the same almost-absent shading. Do not copy the bolt, the badge, the text, or the background.
+
+Draw one cute pink wrapped candy with a chubby body and two short wrapper ends. Keep the shapes simple and a little uneven. Use only a few flat color blocks. No glossy highlights, no round shine spots, no soft gradients, and no 3D volume.
+
+The outline is dark brown, hard-edged, and heavy enough to match the bolt. Leave clear transparent space around the candy so the outline is not cropped. It must stay readable when very small.
+
+Avoid: thin outline, glossy candy, specular highlights, soft gradients, glow, shadow, fine detail, lightning bolt, text, badge, UI panel, multiple candies, cropped edges.
+
+RESULT:
+job_Dtborb6UpvMDZ1ZcuWX996U9
+asset_JvbaSRFk46fecu7t3ea7ATeK
+cuCost 12, cuDiscount 0
+1024x1024, RGBA, transparent
+PNG: CT_Icon_Candy_v004.png
+Ref: asset_7UJxaqGooby3HbvxVGjCRkDh
+Measured outer contour about 33-35 px. At the 100 px candy chip that is about 3.4 px; the chip border is 9 px. Not applied to Unity. Not retried.
+

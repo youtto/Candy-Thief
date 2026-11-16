@@ -42,6 +42,7 @@ public sealed class V02RunHud : MonoBehaviour
     [SerializeField] Image candyChip;
     [SerializeField] Image candyIcon;
     [SerializeField] Sprite hourglassSprite;
+    [SerializeField] Sprite turnCostSprite;
     [SerializeField] Sprite alertSprite;
     [SerializeField] Sprite candySprite;
     [SerializeField] Sprite moveIcon;
@@ -835,7 +836,7 @@ public sealed class V02RunHud : MonoBehaviour
             canExecute,
             disabledReason,
             IconForChoice(isOption, id),
-            hourglassSprite,
+            turnCostSprite,
             () => OnChoiceClicked(capturedId, capturedOption));
         button.BindForecast(successCandy, successCandy, successAlert, failAlert, candySprite, alertSprite);
     }
@@ -1111,12 +1112,13 @@ public sealed class V02RunHud : MonoBehaviour
     void EnsureHudChrome()
     {
         hourglassSprite = LoadUiSprite(hourglassSprite, "CT_Hud_Hourglass_v003");
-        alertSprite = LoadUiSprite(alertSprite, "CT_Hud_Alert_v002");
-        candySprite = LoadUiSprite(candySprite, "CT_Hud_Candy_v001");
+        turnCostSprite = LoadUiSprite(turnCostSprite, "CT_Icon_TurnCost_v006");
+        alertSprite = LoadUiSprite(alertSprite, "CT_Icon_Alert_v005");
+        candySprite = LoadUiSprite(candySprite, "CT_Icon_Candy_v005");
         moveIcon = LoadUiSprite(moveIcon, "CT_Icon_Move_v001");
         infiltrateIcon = LoadUiSprite(infiltrateIcon, "CT_Icon_Infiltrate_v001");
-        lootIcon = LoadUiSprite(lootIcon, "CT_Hud_Candy_v001");
-        escapeIcon = LoadUiSprite(escapeIcon, "CT_Icon_Escape_v001");
+        lootIcon = LoadUiSprite(lootIcon, "CT_Icon_Candy_v005");
+        escapeIcon = LoadUiSprite(escapeIcon, "CT_Icon_Exit_v005");
         eventIcon = LoadUiSprite(eventIcon, "CT_Icon_Event_v001");
 
         if (turnIcon != null)

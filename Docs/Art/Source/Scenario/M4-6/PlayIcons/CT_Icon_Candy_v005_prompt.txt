@@ -1,0 +1,27 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Refs: asset_JvbaSRFk46fecu7t3ea7ATeK — current candy v004. Keep this design.
+Change only line weight and a little lower shading.
+
+PROMPT:
+A single mobile-game icon of one wrapped candy, centered on a fully transparent background.
+
+Keep the candy in the reference exactly: the same round body, the same two wrapper ends, the same pose, and the same pink and light-pink stripes. Do not redesign it.
+
+Change the lines. Every dark outline is twice as thick as the outline in the reference, about 70 pixels on this 1024 image. The outer contour and the internal lines are the same thickness. Draw the stripe boundaries and the wrapper seams with that same heavy dark-brown line. Do not leave any internal line thinner than the outer contour.
+
+Add a little volume. A slightly darker pink shadow sits on the lower part of the candy body and on the lower edge of both wrappers. Keep it matte and simple. No glossy highlights, no round shine spots, and no glow.
+
+Leave clear transparent space around the candy so the thicker outline is not cropped.
+
+Avoid: a redesigned candy, thin outline, thin internal lines, glossy highlights, glow, background shadow, text, multiple candies, cropped edges.
+
+RESULT:
+job_5EtUDAbpYUWneWP21F7K2MMb
+asset_8yKy3eb4jrxNV9MGQjnxreH1
+cuCost 12, cuDiscount 0
+1024x1024, RGBA, transparent
+PNG: CT_Icon_Candy_v005.png
+Ref: asset_JvbaSRFk46fecu7t3ea7ATeK
+Body outline about 44-51 px, versus about 34 px on v004. Applied to the Unity candy slots.
+

@@ -1,0 +1,30 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Status: prompt revised. Design is free. Generate only if the three dry runs total 36 CU or less.
+Style ref only: asset_8yKy3eb4jrxNV9MGQjnxreH1 — approved candy v005. Drawing style only.
+Do not attach older warning icons.
+
+PROMPT:
+A single mobile-game icon of one warning sign that means danger is rising, centered on a fully transparent background.
+
+The reference is an approved candy icon. Use it only for the drawing style: the same heavy dark-brown outline, internal lines as thick as the outer contour, simple flat colors, and a slightly darker shade on the lower part. Do not copy the candy's shape, stripes, or wrappers.
+
+Design the sign freely. Keep only the meaning: one warning triangle with an exclamation mark. Choose its shape, colors, proportions, and small decorations yourself. Keep it simple and readable when very small.
+
+Every dark outline is as thick as the candy's outline. The triangle's outer contour and the exclamation mark's outline use that same thickness. Do not leave any internal line thinner.
+
+Add a little volume. A slightly darker shade sits on the lower part of the triangle. Keep it matte and simple. No glossy highlights, no round shine spots, and no glow.
+
+Leave clear transparent space around the sign so the thick outline is not cropped.
+
+Avoid: thin outline, thin internal lines, glossy highlights, glow, background shadow, candy, text, letters, multiple signs, cropped edges.
+
+RESULT:
+job_Nuu3WQpWk5WDgoVJkJCE45iH
+asset_7vpRECd3HDTtReScG82Tw7pE
+dry_run 12, cuCost 12
+1024x1024, transparent
+PNG: CT_Icon_Alert_v005.png
+Ref: asset_8yKy3eb4jrxNV9MGQjnxreH1
+Not retried.
+

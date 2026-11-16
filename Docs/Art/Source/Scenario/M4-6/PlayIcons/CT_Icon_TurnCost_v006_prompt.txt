@@ -1,0 +1,30 @@
+Model: model_openai-gpt-image-2-5-sunburst
+Params: 1024x1024, quality high, background transparent, numOutputs 1
+Status: simplify v005. Stopwatch only. One generation if dry_run stays at 12 CU.
+Style ref only: asset_8yKy3eb4jrxNV9MGQjnxreH1 — approved candy v005. Drawing style only.
+Do not attach older clock icons.
+
+PROMPT:
+A single mobile-game icon of one cute stopwatch that means a turn is being spent, centered on a fully transparent background.
+
+The reference is an approved candy icon. Use it only for the drawing style: the same heavy dark-brown outline, internal lines as thick as the outer contour, simple flat colors, and a slightly darker shade on the lower part. Do not copy the candy's shape, stripes, or wrappers.
+
+Make it a very simple stopwatch. One round body and one small button on top. One thick hand is enough. No bells, no feet, no tick marks, no numbers, and no extra decorations. Choose the colors yourself. Keep it readable when very small.
+
+Every dark outline is as thick as the candy's outline. The outer contour and the internal lines use that same thickness. Do not leave any internal line thinner.
+
+Add a little volume. A slightly darker shade sits on the lower part of the stopwatch. Keep it matte and simple. No glossy highlights, no round shine spots, and no glow.
+
+Leave clear transparent space around the stopwatch so the thick outline is not cropped.
+
+Avoid: alarm clock, bells, feet, tick marks, numbers, hourglass, thin outline, thin internal lines, glossy highlights, glow, halo, background shadow, candy, text, multiple clocks, cropped edges.
+
+RESULT:
+job_dTf3qs8bYGAddPpzPwurxBgu
+asset_dgMUELcB2SwS2kaDdusabrnz
+dry_run 12, cuCost 12
+1024x1024, transparent
+PNG: CT_Icon_TurnCost_v006.png
+Ref: asset_8yKy3eb4jrxNV9MGQjnxreH1
+Not retried.
+
